@@ -1,12 +1,15 @@
-run = "npm install && npm start"
+run = "node server.js"
 entrypoint = "server.js"
 modules = ["nodejs-20"]
 
 [nix]
 channel = "stable-23_11"
 
+[env]
+PATH = "/home/runner/$REPL_SLUG/.config/npm/node_global/bin:/home/runner/$REPL_SLUG/node_modules/.bin:${PATH}"
+
 [deployment]
-run = ["sh", "-c", "npm install && npm start"]
+run = ["node", "server.js"]
 deploymentTarget = "cloudrun"
 
 [[ports]]

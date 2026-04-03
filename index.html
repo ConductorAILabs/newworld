@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WildMind — If The World Ended, How Would We Start Again?</title>
+  <meta name="api-key" content="">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23d4a574'/></svg>">
+</head>
+<body>
+
+  <!-- ========== Fixed Top Bar ========== -->
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <div class="logo"><span class="wild">Wild</span><span class="mind">Mind</span></div>
+      <div class="logo-tagline">If the world ended, how would we start again?</div>
+      <div class="world-info">
+        <div class="info-badge" data-tooltip="One simulation heartbeat. Every 30-90 seconds, the world advances one tick.">
+          <span class="label">Tick</span>
+          <span class="value" id="tick-value">--</span>
+        </div>
+        <div class="info-badge">
+          <span class="label">Day</span>
+          <span class="value" id="day-value">--</span>
+        </div>
+        <div class="info-badge">
+          <span class="label">Season</span>
+          <span class="value" id="season-value">--</span>
+        </div>
+        <div class="info-badge">
+          <span class="label">Time</span>
+          <span class="value" id="time-value">--</span>
+        </div>
+        <div class="info-badge">
+          <span class="label">Weather</span>
+          <span class="value" id="weather-value">--</span>
+        </div>
+      </div>
+    </div>
+    <div class="top-bar-center">
+      <div class="world-badge" id="world-badge">World --</div>
+      <div id="stage-indicator" class="stage-indicator stage-pre-language">Pre-Language</div>
+      <div class="connection-status">
+        <div id="status-dot" class="status-dot" role="status" aria-live="polite"></div>
+        <span id="connection-label">Connecting...</span>
+      </div>
+    </div>
+    <nav class="tab-nav" id="tab-nav">
+      <button class="tab-btn active" data-tab="overview" aria-label="Overview">Overview</button>
+      <button class="tab-btn" data-tab="citizens" aria-label="Citizens">Citizens</button>
+      <button class="tab-btn" data-tab="language" aria-label="Language">Language</button>
+      <button class="tab-btn" data-tab="events" aria-label="Events">Events</button>
+      <button class="tab-btn" data-tab="learning" aria-label="Learning">Learning</button>
+      <button class="tab-btn tab-btn-proto" data-tab="proto-sounds" aria-label="Proto-Sounds">◉ Proto-Sounds</button>
+      <a href="worlds.html" class="tab-btn tab-link">Worlds</a>
+      <a href="insights.html" class="tab-btn tab-link">Research</a>
+      <a href="about.html" class="tab-btn tab-link">About</a>
+      <a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener" class="support-btn">Support This Project</a>
+    </nav>
+    <!-- Mobile tab dropdown -->
+    <div class="tab-dropdown" id="tab-dropdown">
+      <button class="tab-dropdown-toggle" id="tab-dropdown-toggle">Overview</button>
+      <div class="tab-dropdown-menu" id="tab-dropdown-menu">
+        <button data-tab="overview">Overview</button>
+        <button data-tab="citizens">Citizens</button>
+        <button data-tab="language">Language</button>
+        <button data-tab="events">Events</button>
+        <button data-tab="learning">Learning</button>
+        <button data-tab="proto-sounds">◉ Proto-Sounds</button>
+        <a href="worlds.html" style="display:block;padding:8px 14px;color:var(--text-secondary);text-decoration:none;font-size:0.82rem;">Worlds</a>
+        <a href="insights.html" style="display:block;padding:8px 14px;color:var(--text-secondary);text-decoration:none;font-size:0.82rem;">Research</a>
+        <a href="about.html" style="display:block;padding:8px 14px;color:var(--text-secondary);text-decoration:none;font-size:0.82rem;">About</a>
+        <a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener" style="display:block;padding:8px 14px;color:var(--accent-amber);text-decoration:none;font-size:0.82rem;">Support</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Citizen Inspect Panel (slide-in) -->
+  <div class="inspect-panel" id="inspect-panel">
+    <div class="inspect-header">
+      <span class="inspect-name" id="inspect-name">--</span>
+      <button class="inspect-close" id="inspect-close">&times;</button>
+    </div>
+    <div class="inspect-body" id="inspect-body"></div>
+  </div>
+
+  <!-- Citizen Comparison Panel -->
+  <div class="compare-panel" id="compare-panel" style="display:none">
+    <div class="compare-header">
+      <span class="compare-title">Compare Citizens</span>
+      <button class="compare-close" id="compare-close">&times;</button>
+    </div>
+    <div class="compare-body" id="compare-body"></div>
+  </div>
+
+  <!-- Snapshot Scrubber -->
+  <div class="scrubber-bar" id="scrubber-bar" style="display:none">
+    <span class="scrubber-label">TIMELINE</span>
+    <input type="range" id="scrubber-range" class="scrubber-range" min="0" max="100" value="100">
+    <span class="scrubber-tick" id="scrubber-tick">Live</span>
+    <button class="scrubber-live-btn" id="scrubber-live">LIVE</button>
+  </div>
+
+  <!-- World Transition Banner -->
+  <div class="world-transition" id="world-transition" style="display:none">
+    <div class="wt-pulse"></div>
+    <div class="wt-content">
+      <div class="wt-title">World Transitioning</div>
+      <div class="wt-desc">The current world has ended. AI models are being retrained on lived experiences from this world — conversations, relationships, survival, and everything that happened. The next generation will think differently.</div>
+      <div class="wt-actions">
+        <a href="/insights.html" class="wt-btn">View World Data &amp; Analysis</a>
+        <a href="/insights.html#world-history" class="wt-btn wt-btn-dim">See Past Worlds</a>
+      </div>
+      <div class="wt-status" id="wt-status">Waiting for next world to begin...</div>
+    </div>
+  </div>
+
+  <!-- Export Toast -->
+  <div class="export-toast" id="export-toast">Data exported to CSV</div>
+
+  <!-- Performance Debug Overlay -->
+  <div class="perf-overlay" id="perf-overlay" style="display:none">
+    <span id="perf-fps">--fps</span>
+    <span id="perf-poll">--ms poll</span>
+    <span id="perf-render">--ms render</span>
+    <span id="perf-errors">0 errors</span>
+  </div>
+
+  <!-- Utterance Replay Panel -->
+  <div class="replay-panel" id="replay-panel" style="display:none">
+    <div class="replay-header">
+      <span class="replay-title">Utterance Replay</span>
+      <button class="replay-close" id="replay-close">&times;</button>
+    </div>
+    <div class="replay-body" id="replay-body"></div>
+    <div class="replay-controls">
+      <button class="replay-btn" id="replay-prev">&lt;</button>
+      <button class="replay-btn" id="replay-play">Play</button>
+      <button class="replay-btn" id="replay-next">&gt;</button>
+    </div>
+  </div>
+
+  <!-- ========== Tab Content ========== -->
+  <main class="tab-content">
+
+    <!-- ===== TAB 1: OVERVIEW ===== -->
+    <section class="tab-pane active" id="tab-overview">
+      <div class="overview-split">
+
+        <!-- LEFT: Map -->
+        <div class="fullscreen-map">
+          <div class="map-toolbar">
+            <div class="toolbar-group">
+              <span class="toolbar-label">VIEW MODE</span>
+              <button class="toolbar-btn active" id="view-terrain" onclick="setMapView('terrain')" title="Terrain — biome, elevation, temperature">Terrain</button>
+              <button class="toolbar-btn" id="view-social" onclick="setMapView('social')" title="Social — citizen locations, relationships">People</button>
+              <button class="toolbar-btn" id="view-resources" onclick="setMapView('resources')" title="Resources — food, materials, water">Resources</button>
+              <button class="toolbar-btn" id="view-danger" onclick="setMapView('danger')" title="Danger — predators, hazards, threats">Danger</button>
+            </div>
+            <div class="toolbar-group">
+              <span class="toolbar-label">LAYERS</span>
+              <button class="toolbar-btn active" id="toggle-labels" onclick="toggleMapLayer('labels')" title="Show/hide landmark markers">Markers</button>
+              <button class="toolbar-btn active" id="toggle-animals" onclick="toggleMapLayer('animals')" title="Show/hide animal positions">Animals</button>
+              <button class="toolbar-btn active" id="toggle-speech" onclick="toggleMapLayer('speech')" title="Show/hide speech bubbles">Speech</button>
+            </div>
+            <div class="toolbar-group">
+              <input type="text" id="citizen-search" class="citizen-search-input" placeholder="Search citizen..." autocomplete="off">
+            </div>
+            <span id="citizen-count" class="toolbar-count">0</span>
+          </div>
+          <div id="map-container" style="position:relative;width:100%;flex:1;background:#0a0a10">
+            <canvas id="map-canvas" role="img" aria-label="World map showing citizen positions and terrain" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
+          </div>
+          <div class="biome-legend" id="biome-legend">
+            <span class="biome-legend-title">BIOMES</span>
+            <div class="biome-legend-items">
+              <span class="biome-swatch" style="background:#2d5a3a" title="Tropical Forest"></span>
+              <span class="biome-swatch" style="background:#8b7d3c" title="Savanna"></span>
+              <span class="biome-swatch" style="background:#c4a44a" title="Desert"></span>
+              <span class="biome-swatch" style="background:#3a6b4a" title="Temperate"></span>
+              <span class="biome-swatch" style="background:#2a4a3a" title="Boreal"></span>
+              <span class="biome-swatch" style="background:#5a7a8a" title="Tundra"></span>
+              <span class="biome-swatch" style="background:#8ab4cc" title="Ice"></span>
+              <span class="biome-swatch" style="background:#3a6a8a" title="Water"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Live Feed + Narrative -->
+        <div class="overview-feed-panel">
+          <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+            <div class="card-header">
+              <span class="card-title">Live Feed</span>
+              <span class="card-count" id="feed-count">0 events</span>
+            </div>
+            <div class="feed-filters" id="feed-filters">
+              <button class="feed-filter active" data-filter="all" onclick="setFeedFilter('all')">All</button>
+              <button class="feed-filter" data-filter="speech" onclick="setFeedFilter('speech')">Speech</button>
+              <button class="feed-filter" data-filter="world" onclick="setFeedFilter('world')">Events</button>
+              <button class="feed-filter" data-filter="milestone" onclick="setFeedFilter('milestone')">Milestones</button>
+              <button class="feed-filter" data-filter="transfer" onclick="setFeedFilter('transfer')">Language</button>
+              <button class="feed-filter" data-filter="attack" onclick="setFeedFilter('attack')">Danger</button>
+              <button class="feed-filter" data-filter="death" onclick="setFeedFilter('death')">Deaths</button>
+            </div>
+            <div id="live-feed" class="live-feed" style="flex:1;min-height:0">
+              <div class="loading-state" id="feed-loading">
+                <div class="loading-spinner"></div>
+                <span>Waiting for simulation data...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Visual Dashboard Grid -->
+      <div class="dash-grid">
+
+        <!-- Row 1: Key numbers -->
+        <div class="dash-card dash-wide">
+          <div class="dash-header">
+            <span class="dash-title" id="dash-world-title">WORLD --</span>
+            <span class="dash-subtitle" id="dash-world-info">Active</span>
+          </div>
+          <div class="dash-numbers">
+            <div class="dash-num"><span class="dash-big" id="dash-tick">0</span><span class="dash-label">Tick</span></div>
+            <div class="dash-num"><span class="dash-big" id="dash-alive">0</span><span class="dash-label">Alive</span></div>
+            <div class="dash-num"><span class="dash-big" id="dash-dead">0</span><span class="dash-label">Dead</span></div>
+            <div class="dash-num"><span class="dash-big" id="dash-vocab">0</span><span class="dash-label">Shared Words</span></div>
+            <div class="dash-num"><span class="dash-big" id="dash-interactions">0</span><span class="dash-label">Interactions</span></div>
+            <div class="dash-num"><span class="dash-big" id="dash-voices">0</span><span class="dash-label">Voice Clips</span></div>
+          </div>
+        </div>
+
+        <!-- Ecosystem status -->
+        <div class="dash-card">
+          <div class="dash-header"><span class="dash-title">CLIMATE</span></div>
+          <div class="dash-body">
+            <div class="dash-stat"><span class="dash-stat-label">Season</span><span class="dash-stat-val" id="dash-season">--</span></div>
+            <div class="dash-stat"><span class="dash-stat-label">Temp</span><span class="dash-stat-val" id="dash-temp">--</span></div>
+            <div class="dash-stat"><span class="dash-stat-label">Weather</span><span class="dash-stat-val" id="dash-weather">--</span></div>
+            <div class="dash-stat"><span class="dash-stat-label">Time</span><span class="dash-stat-val" id="dash-time">--</span></div>
+          </div>
+        </div>
+
+        <!-- Survival — Chart.js radar -->
+        <div class="dash-card">
+          <div class="dash-header"><span class="dash-title">SURVIVAL</span></div>
+          <div style="position:relative;height:180px">
+            <canvas id="chart-survival-radar"></canvas>
+          </div>
+        </div>
+
+        <!-- Archetype breakdown — Chart.js doughnut -->
+        <div class="dash-card">
+          <div class="dash-header"><span class="dash-title">ARCHETYPES</span></div>
+          <div style="position:relative;height:180px">
+            <canvas id="chart-archetype-doughnut"></canvas>
+          </div>
+          <div class="dash-body" id="dash-archetypes" style="display:none"></div>
+        </div>
+
+        <!-- Relationship web -->
+        <div class="dash-card">
+          <div class="dash-header"><span class="dash-title">RELATIONSHIPS</span><span class="dash-subtitle" id="rel-count">0 bonds</span></div>
+          <div style="position:relative;height:200px">
+            <canvas id="rel-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
+          </div>
+        </div>
+
+        <!-- Language progress — Chart.js line -->
+        <div class="dash-card">
+          <div class="dash-header"><span class="dash-title">LANGUAGE</span></div>
+          <div class="dash-body">
+            <div class="dash-stat"><span class="dash-stat-label">Shared Words</span><span class="dash-stat-val" id="dash-shared-words">0</span></div>
+            <div class="dash-stat"><span class="dash-stat-label">Total Sounds</span><span class="dash-stat-val" id="dash-total-sounds">0</span></div>
+            <div class="dash-stat"><span class="dash-stat-label">Success Rate</span><span class="dash-stat-val" id="dash-success-rate">0%</span></div>
+          </div>
+          <div style="position:relative;height:80px">
+            <canvas id="chart-vocab-sparkline"></canvas>
+          </div>
+          <canvas id="sparkline-vocab" style="display:none"></canvas>
+        </div>
+
+        <!-- Population trend — Chart.js line -->
+        <div class="dash-card">
+          <div class="dash-header"><span class="dash-title">POPULATION</span></div>
+          <div style="position:relative;height:180px">
+            <canvas id="chart-population-trend"></canvas>
+          </div>
+        </div>
+
+        <!-- Voice Clips -->
+        <div class="dash-card">
+          <div class="dash-header"><span class="dash-title">VOICE CLIPS</span><span class="dash-subtitle" id="dash-voice-count">0 clips</span></div>
+          <div class="dash-body" id="dash-voice-list" style="max-height:200px;overflow-y:auto">
+            <span class="dash-milestone-none">No audio yet</span>
+          </div>
+        </div>
+
+        <!-- Milestones -->
+        <div class="dash-card dash-wide">
+          <div class="dash-header"><span class="dash-title">MILESTONES</span></div>
+          <div class="dash-milestones" id="dash-milestones">
+            <span class="dash-milestone-none">None yet — waiting for language to emerge</span>
+          </div>
+        </div>
+
+        <!-- World History — Chart.js bar -->
+        <div class="dash-card dash-wide">
+          <div class="dash-header"><span class="dash-title">WORLD HISTORY</span></div>
+          <div style="position:relative;height:200px;margin-bottom:12px">
+            <canvas id="chart-world-history-bar"></canvas>
+          </div>
+          <div id="dash-world-history" style="overflow-x:auto">
+            <table class="dict-table" style="width:100%">
+              <thead><tr>
+                <th>World</th><th>Status</th><th>Ticks</th><th>Interactions</th><th>Shared Words</th><th>Milestones</th>
+              </tr></thead>
+              <tbody id="dash-world-history-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== TAB 2: CITIZENS ===== -->
+    <section class="tab-pane" id="tab-citizens">
+      <div class="citizens-grid" id="citizens-grid"></div>
+    </section>
+
+    <!-- ===== TAB 3: LANGUAGE ===== -->
+    <section class="tab-pane" id="tab-language">
+
+      <!-- Language Overview -->
+      <div class="language-overview">
+        <div class="lang-stat card">
+          <div class="metric-header">
+            <span class="metric-label">Total Unique Sounds</span>
+            <button class="help-btn" data-tooltip="Proto-Language: Invented sounds the citizens produce. NOT English — these are unique vocalizations generated by each citizen's AI model.">?</button>
+          </div>
+          <span class="metric-value" id="lang-total-sounds">0</span>
+        </div>
+        <div class="lang-stat card">
+          <div class="metric-header">
+            <span class="metric-label">Shared Words</span>
+            <button class="help-btn" data-tooltip="When 3+ citizens independently use the same sound for the same meaning, it becomes a 'shared word' — the beginning of language.">?</button>
+          </div>
+          <span class="metric-value" id="lang-shared-words">0</span>
+        </div>
+        <div class="lang-stat card">
+          <div class="metric-header">
+            <span class="metric-label">Active Speakers</span>
+          </div>
+          <span class="metric-value" id="lang-active-speakers">0</span>
+        </div>
+        <div class="lang-stat card">
+          <div class="metric-header">
+            <span class="metric-label">Total Utterances</span>
+          </div>
+          <span class="metric-value" id="lang-total-utterances">0</span>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="lang-charts-row">
+        <div class="card lang-chart-card">
+          <div class="card-header">
+            <span class="card-title">Communication Success Rate Over Time</span>
+          </div>
+          <canvas id="chart-success-rate" height="200"></canvas>
+        </div>
+        <div class="card lang-chart-card">
+          <div class="card-header">
+            <span class="card-title">Vocabulary Growth Over Time</span>
+          </div>
+          <canvas id="chart-vocab-growth" height="200"></canvas>
+        </div>
+      </div>
+
+      <!-- Shared Dictionary Table -->
+      <div class="card lang-dictionary">
+        <div class="card-header">
+          <span class="card-title">Shared Dictionary — The Rosetta Stone</span>
+          <button class="help-btn" data-tooltip="These are sounds that 3+ citizens use for the same meaning — the tribe's shared language.">?</button>
+        </div>
+        <p class="section-explanation">These are sounds that 3+ citizens use for the same meaning — the tribe's shared language.</p>
+        <div class="dict-controls">
+          <input type="text" id="dict-search" class="dict-search" placeholder="Search sounds or meanings...">
+          <select id="dict-sort" class="dict-sort">
+            <option value="confidence">Sort by Confidence</option>
+            <option value="sound">Sort by Sound</option>
+            <option value="meaning">Sort by Meaning</option>
+            <option value="citizens">Sort by Known By</option>
+            <option value="tick">Sort by Established At</option>
+          </select>
+        </div>
+        <div class="dict-table-wrapper">
+          <table class="dict-table" id="shared-dict-table">
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="sound">Sound</th>
+                <th class="sortable" data-sort="meaning">Meaning</th>
+                <th class="sortable" data-sort="confidence">Confidence</th>
+                <th class="sortable" data-sort="citizens">Known By</th>
+                <th class="sortable" data-sort="tick">Established At</th>
+              </tr>
+            </thead>
+            <tbody id="shared-dict-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Bottom row: Vocab comparison + Language Transfers -->
+      <div class="lang-bottom-row">
+        <div class="card lang-vocab-comparison">
+          <div class="card-header">
+            <span class="card-title">Per-Citizen Vocabulary Size</span>
+          </div>
+          <div id="vocab-comparison-bars" class="vocab-comparison-bars"></div>
+        </div>
+        <div class="card lang-transfers">
+          <div class="card-header">
+            <span class="card-title">Recent Language Transfers</span>
+            <button class="help-btn" data-tooltip="Language transfers happen when context makes meaning obvious — like saying a sound while pointing at fire.">?</button>
+          </div>
+          <p class="section-explanation">Language transfers happen when context makes meaning obvious — like saying a sound while pointing at fire.</p>
+          <div class="transfers-table-wrapper">
+            <table class="dict-table">
+              <thead>
+                <tr>
+                  <th>Tick</th>
+                  <th>Speaker</th>
+                  <th>Utterance</th>
+                  <th>Understood By</th>
+                  <th>Success</th>
+                </tr>
+              </thead>
+              <tbody id="transfers-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===== TAB 4: EVENTS ===== -->
+    <section class="tab-pane" id="tab-events">
+      <div class="events-controls">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="weather">Weather</button>
+        <button class="filter-btn" data-filter="animal">Animals</button>
+        <button class="filter-btn" data-filter="fire">Fire</button>
+        <button class="filter-btn" data-filter="danger">Danger</button>
+        <button class="filter-btn" data-filter="social">Social</button>
+        <button class="filter-btn" data-filter="illness">Illness</button>
+        <button class="filter-btn" data-filter="mystery">Mystery</button>
+        <button class="filter-btn" data-filter="milestone">Milestones</button>
+      </div>
+      <div class="events-timeline" id="events-timeline"></div>
+    </section>
+
+    <!-- ===== TAB 5: LEARNING ===== -->
+    <section class="tab-pane" id="tab-learning">
+
+      <!-- HERO SECTION -->
+      <div class="learning-hero">
+        <div class="learning-hero-content">
+          <div class="learning-hero-headline">Real-Time AI Evolution</div>
+          <div class="learning-hero-sub">30 independent language models. Zero shared knowledge. Every interaction, death, and survival decision feeds back into the next generation. Scroll to see the science behind artificial intelligence evolving from scratch.</div>
+        </div>
+        <div class="learning-hero-metrics" id="learning-hero-metrics">
+          <div class="lh-metric">
+            <div class="lh-metric-val" id="lh-worlds">--</div>
+            <div class="lh-metric-label">Worlds Run</div>
+          </div>
+          <div class="lh-metric">
+            <div class="lh-metric-val" id="lh-interactions">--</div>
+            <div class="lh-metric-label">Interactions</div>
+          </div>
+          <div class="lh-metric">
+            <div class="lh-metric-val" id="lh-deaths">--</div>
+            <div class="lh-metric-label">Deaths Recorded</div>
+          </div>
+          <div class="lh-metric">
+            <div class="lh-metric-val" id="lh-vocab">--</div>
+            <div class="lh-metric-label">Shared Words</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EVOLUTION PIPELINE — compact, visual -->
+      <div class="evo-pipeline">
+        <div class="evo-pipe-step">
+          <div class="evo-pipe-num">1</div>
+          <div class="evo-pipe-text"><strong>Live</strong> Independent models interact</div>
+        </div>
+        <div class="evo-pipe-connector"></div>
+        <div class="evo-pipe-step">
+          <div class="evo-pipe-num">2</div>
+          <div class="evo-pipe-text"><strong>Record</strong> Every decision, consequence, death</div>
+        </div>
+        <div class="evo-pipe-connector"></div>
+        <div class="evo-pipe-step">
+          <div class="evo-pipe-num">3</div>
+          <div class="evo-pipe-text"><strong>Harvest</strong> ALL data feeds back — survivors and dead</div>
+        </div>
+        <div class="evo-pipe-connector"></div>
+        <div class="evo-pipe-step">
+          <div class="evo-pipe-num">4</div>
+          <div class="evo-pipe-text"><strong>Evolve</strong> Retrain base models, start new world</div>
+        </div>
+      </div>
+
+      <!-- 1. Science Metrics Dashboard -->
+      <div class="sci-metrics-row" id="sci-metrics-row">
+        <div class="sci-metric-card" id="sci-heaps-beta">
+          <span class="sci-metric-label">Heaps' Beta</span>
+          <span class="sci-metric-value">--</span>
+          <span class="sci-metric-sub"></span>
+        </div>
+        <div class="sci-metric-card" id="sci-zipf-coeff">
+          <span class="sci-metric-label">Zipf Coefficient</span>
+          <span class="sci-metric-value">--</span>
+          <span class="sci-metric-sub"></span>
+        </div>
+        <div class="sci-metric-card" id="sci-clustering">
+          <span class="sci-metric-label">Clustering Coeff.</span>
+          <span class="sci-metric-value">--</span>
+          <span class="sci-metric-sub"></span>
+        </div>
+        <div class="sci-metric-card" id="sci-transfers">
+          <span class="sci-metric-label">Transfer Events</span>
+          <span class="sci-metric-value">--</span>
+          <span class="sci-metric-sub"></span>
+        </div>
+        <div class="sci-metric-card" id="sci-efficiency">
+          <span class="sci-metric-label">Comm. Efficiency</span>
+          <span class="sci-metric-value">--</span>
+          <span class="sci-metric-sub"></span>
+        </div>
+        <div class="sci-metric-card" id="sci-growth-model">
+          <span class="sci-metric-label">Growth Model</span>
+          <span class="sci-metric-value">--</span>
+          <span class="sci-metric-sub"></span>
+        </div>
+      </div>
+
+      <!-- 2. Heaps' Law + 3. Zipf Gauge -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Heaps' Law -- Vocabulary Richness</span>
+            <button class="help-btn" data-tooltip="Heaps' Law: V = K * N^beta. Natural language beta is 0.4-0.6. The shaded band shows that range.">?</button>
+          </div>
+          <canvas id="chart-heaps-law" height="260"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Zipf's Law Gauge</span>
+            <button class="help-btn" data-tooltip="Zipf's Law: word frequency inversely proportional to rank. Coefficient near -1.0 = natural language.">?</button>
+          </div>
+          <canvas id="chart-zipf-gauge" height="260"></canvas>
+        </div>
+      </div>
+
+      <!-- 4. Growth Curve + 5. Network Analysis -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Vocabulary Growth Curve</span>
+            <button class="help-btn" data-tooltip="Shared vocabulary over ticks with best-fit model overlay and prediction.">?</button>
+          </div>
+          <canvas id="chart-growth-curve" height="260"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Network Analysis</span>
+            <button class="help-btn" data-tooltip="Social network: clustering vs random, degree distribution, central nodes.">?</button>
+          </div>
+          <canvas id="chart-network-analysis" height="260"></canvas>
+        </div>
+      </div>
+
+      <!-- 6. Influence + 7. Cascades -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Influence Ranking (PageRank)</span>
+            <button class="help-btn" data-tooltip="Which citizens drive language evolution: words originated, words spread, influence score.">?</button>
+          </div>
+          <canvas id="chart-influence" height="260"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Information Cascades</span>
+            <button class="help-btn" data-tooltip="How sounds spread through the tribe: origin, adopters, velocity.">?</button>
+          </div>
+          <div id="cascade-cards-container" class="cascade-cards-container">
+            <span class="muted-text">Waiting for cascade data...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. Efficiency + 9. Context Donut -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Communication Efficiency</span>
+            <button class="help-btn" data-tooltip="Success rate and average utterance length over time.">?</button>
+          </div>
+          <canvas id="chart-comm-efficiency" height="260"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Context Type Breakdown</span>
+            <button class="help-btn" data-tooltip="Distribution of interaction context types from recent utterances.">?</button>
+          </div>
+          <canvas id="chart-context-donut" height="260"></canvas>
+        </div>
+      </div>
+
+      <!-- 10. Heatmap + 11. Timeline -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Interaction Heatmap</span>
+            <button class="help-btn" data-tooltip="Relationship strength between citizen pairs. Warmer = stronger bond.">?</button>
+          </div>
+          <canvas id="chart-heatmap" height="300"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Milestone Timeline</span>
+            <button class="help-btn" data-tooltip="Visual timeline of milestones along the tick axis.">?</button>
+          </div>
+          <canvas id="chart-milestone-timeline" height="300"></canvas>
+        </div>
+      </div>
+
+      <!-- Milestones Badges -->
+      <div class="card learning-milestones">
+        <div class="card-header">
+          <span class="card-title">Civilization Milestones</span>
+          <button class="help-btn" data-tooltip="Milestones: First Shared Word -> Basic Vocabulary (10 words) -> Proto-Grammar (2-word combos) -> Tribal Language (25 words) -> Culture -> Civilization (50+ words)">?</button>
+        </div>
+        <div id="milestones-container" class="milestones-list">
+          <span class="muted-text">None yet</span>
+        </div>
+      </div>
+
+      <!-- 12. Deaths + 13. Worlds -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Death Statistics</span>
+            <button class="help-btn" data-tooltip="Causes of death among citizens.">?</button>
+          </div>
+          <canvas id="chart-death-stats" height="220"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">World Comparison</span>
+            <button class="help-btn" data-tooltip="Compares simulation worlds by ticks, interactions, and shared words.">?</button>
+          </div>
+          <canvas id="chart-world-comparison" height="220"></canvas>
+        </div>
+      </div>
+
+      <!-- Historical Timeline -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">Historical Snapshots Timeline</span>
+          <button class="help-btn" data-tooltip="Population, shared vocabulary, and success rate tracked over time from periodic database snapshots.">?</button>
+        </div>
+        <canvas id="chart-snapshot-timeline" height="280"></canvas>
+      </div>
+
+      <!-- Science Metrics Over Time (from science_history) -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Heaps' Beta Over Time</span>
+            <button class="help-btn" data-tooltip="Tracks how Heaps' Law beta changes as the simulation progresses. Natural language range is 0.4-0.6.">?</button>
+          </div>
+          <canvas id="chart-heaps-history" height="220"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Zipf Coefficient Over Time</span>
+            <button class="help-btn" data-tooltip="Tracks the Zipf's Law coefficient trending toward -1.0 (natural language target).">?</button>
+          </div>
+          <canvas id="chart-zipf-history" height="220"></canvas>
+        </div>
+      </div>
+
+      <!-- Training History -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">Model Training History</span>
+          <button class="help-btn" data-tooltip="Each citizen's AI model is periodically retrained on their lived experiences. Shows training dataset composition over successive versions.">?</button>
+        </div>
+        <canvas id="chart-training-history" height="300"></canvas>
+      </div>
+
+      <!-- Training Runs Table -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">Training Runs Log</span>
+          <button class="help-btn" data-tooltip="Detailed record of every additive training run: dataset sizes, tick ranges, citizen versions.">?</button>
+        </div>
+        <div id="training-runs-table" style="max-height:300px;overflow-y:auto">
+          <span class="muted-text">No training data yet</span>
+        </div>
+      </div>
+
+      <!-- Vocabulary Growth Per Citizen -->
+      <div class="card learning-vocab-charts">
+        <div class="card-header">
+          <span class="card-title">Vocabulary Growth Per Citizen</span>
+        </div>
+        <canvas id="chart-citizen-vocab" height="250"></canvas>
+      </div>
+
+      <!-- Intelligence Metrics -->
+      <div class="learning-intelligence-row">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Communication Success by Citizen</span>
+          </div>
+          <div id="citizen-success-bars" class="citizen-success-bars"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Utterance Statistics</span>
+          </div>
+          <div class="intelligence-stats" id="intelligence-stats"></div>
+        </div>
+      </div>
+
+      <!-- Semantic Field Sunburst -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Semantic Field Development</span>
+            <button class="help-btn" data-tooltip="Which meaning categories developed first: survival, social, environmental, cognitive.">?</button>
+          </div>
+          <canvas id="chart-semantic-fields" height="280"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Phoneme Frequency</span>
+            <button class="help-btn" data-tooltip="Distribution of consonants and vowels in the proto-language.">?</button>
+          </div>
+          <canvas id="chart-phoneme-freq" height="280"></canvas>
+        </div>
+      </div>
+
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Archetype Learning Speed</span>
+            <button class="help-btn" data-tooltip="How quickly each archetype acquires vocabulary.">?</button>
+          </div>
+          <canvas id="chart-archetype-compare" height="240"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Relationship Types</span>
+            <button class="help-btn" data-tooltip="Distribution of relationship types: rivalry, mentorship, romantic, etc.">?</button>
+          </div>
+          <canvas id="chart-rel-types" height="240"></canvas>
+        </div>
+      </div>
+
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Survival Curves</span>
+            <button class="help-btn" data-tooltip="Kaplan-Meier style survival probability by role and sex.">?</button>
+          </div>
+          <canvas id="chart-survival-curves" height="240"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Event Frequency</span>
+            <button class="help-btn" data-tooltip="Frequency of world events over time (per 50-tick window).">?</button>
+          </div>
+          <canvas id="chart-event-freq" height="240"></canvas>
+        </div>
+      </div>
+
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Citizen Mood Trajectories</span>
+            <button class="help-btn" data-tooltip="Mood values for each citizen over time (from snapshots).">?</button>
+          </div>
+          <canvas id="chart-mood-heatmap" height="260"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Vocabulary Overlap Matrix</span>
+            <button class="help-btn" data-tooltip="How many sounds each citizen pair shares in common.">?</button>
+          </div>
+          <canvas id="chart-vocab-overlap" height="260"></canvas>
+        </div>
+      </div>
+
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Language Transfer Network</span>
+            <button class="help-btn" data-tooltip="Who taught whom: arrows show language transfer direction.">?</button>
+          </div>
+          <canvas id="chart-transfer-network" height="280"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">World Leaderboard</span>
+            <button class="help-btn" data-tooltip="Worlds ranked by key metrics.">?</button>
+          </div>
+          <div id="world-leaderboard" style="max-height:280px;overflow-y:auto">
+            <span class="muted-text">No world data yet</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Predation Timeline -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">Predation &amp; Hunt Events</span>
+          <button class="help-btn" data-tooltip="Timeline of wolf attacks, citizen hunts, and predation events.">?</button>
+        </div>
+        <canvas id="chart-predation-timeline" height="180"></canvas>
+      </div>
+
+      <!-- Batch World Comparison -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">Cross-World Overlay</span>
+          <button class="help-btn" data-tooltip="Overlay vocabulary growth from all worlds on a single chart.">?</button>
+          <button class="help-btn export-btn" id="export-learning-csv" data-tooltip="Export learning data as CSV">CSV</button>
+        </div>
+        <canvas id="chart-world-overlay" height="240"></canvas>
+      </div>
+
+      <!-- Sound Etymology -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">Sound Etymology Tracker</span>
+          <button class="help-btn" data-tooltip="Trace shared words back to their origin: who first used each sound and how it spread.">?</button>
+        </div>
+        <div id="etymology-container" style="max-height:300px;overflow-y:auto">
+          <span class="muted-text">No shared words to trace yet</span>
+        </div>
+      </div>
+
+      <!-- Family Tree + Dialect Regions -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Family Tree</span>
+            <button class="help-btn" data-tooltip="Lineage tree showing parent-child relationships among citizens across generations.">?</button>
+          </div>
+          <canvas id="chart-family-tree" height="300"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Dialect Regions</span>
+            <button class="help-btn" data-tooltip="Geographic clusters of shared vocabulary — where distinct dialects are forming on the map.">?</button>
+          </div>
+          <canvas id="chart-dialect-regions" height="300"></canvas>
+        </div>
+      </div>
+
+      <!-- Language Death + Migration Patterns -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Language Death</span>
+            <button class="help-btn" data-tooltip="Tracks words that fall out of use: when the last speaker of a sound dies, the word is lost forever.">?</button>
+          </div>
+          <canvas id="chart-language-death" height="240"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Migration Patterns</span>
+            <button class="help-btn" data-tooltip="Movement paths of citizens over time, showing territorial drift and nomadic behavior.">?</button>
+          </div>
+          <canvas id="chart-migration" height="240"></canvas>
+        </div>
+      </div>
+
+      <!-- Seasonal Language + Night vs Day Sounds -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Seasonal Language</span>
+            <button class="help-btn" data-tooltip="How vocabulary usage shifts with seasons — some words are only used in winter or during dry spells.">?</button>
+          </div>
+          <canvas id="chart-seasonal-lang" height="240"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Night vs Day Sounds</span>
+            <button class="help-btn" data-tooltip="Compares vocalizations made during daytime vs nighttime — different contexts produce different language.">?</button>
+          </div>
+          <canvas id="chart-night-day" height="240"></canvas>
+        </div>
+      </div>
+
+      <!-- Influence Decay + Word Wars -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Influence Decay</span>
+            <button class="help-btn" data-tooltip="How quickly a citizen's linguistic influence fades after death or isolation.">?</button>
+          </div>
+          <canvas id="chart-influence-decay" height="240"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Word Wars</span>
+            <button class="help-btn" data-tooltip="Competing sounds for the same meaning — which synonym wins adoption across the tribe.">?</button>
+          </div>
+          <canvas id="chart-word-wars" height="240"></canvas>
+        </div>
+      </div>
+
+      <!-- Phoneme Evolution + Word Adoption Speed -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Phoneme Evolution</span>
+            <button class="help-btn" data-tooltip="How individual phonemes mutate and drift over time as citizens imperfectly copy each other.">?</button>
+          </div>
+          <canvas id="chart-phoneme-evolution" height="260"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Word Adoption Speed</span>
+            <button class="help-btn" data-tooltip="Time from first utterance to shared-word status for each adopted word. Faster = stronger social pressure.">?</button>
+          </div>
+          <canvas id="chart-adoption-speed" height="260"></canvas>
+        </div>
+      </div>
+
+      <!-- Archetype Rivalry + Food Chain -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Archetype Rivalry</span>
+            <button class="help-btn" data-tooltip="Head-to-head comparison of archetypes: who dominates in language, survival, and social bonds.">?</button>
+          </div>
+          <canvas id="chart-archetype-rivalry" height="260"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Food Chain</span>
+            <button class="help-btn" data-tooltip="Predator-prey relationships: who hunts what, attack success rates, and ecosystem balance.">?</button>
+          </div>
+          <canvas id="chart-food-chain" height="260"></canvas>
+        </div>
+      </div>
+
+      <!-- Language Tree + Relationship Strength -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Language Tree</span>
+            <button class="help-btn" data-tooltip="Phylogenetic tree of the proto-language: how words branch and evolve from common roots.">?</button>
+          </div>
+          <canvas id="chart-language-tree" height="300"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Relationship Strength</span>
+            <button class="help-btn" data-tooltip="Bond strength between citizen pairs over time — rising bonds show deepening relationships.">?</button>
+          </div>
+          <canvas id="chart-rel-strength" height="300"></canvas>
+        </div>
+      </div>
+
+      <!-- Event Causality + Danger Heatmap -->
+      <div class="learn-chart-row learn-chart-row-2col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Event Causality</span>
+            <button class="help-btn" data-tooltip="Chain of cause-and-effect: how one event triggers others (e.g., drought leads to migration leads to new dialect).">?</button>
+          </div>
+          <canvas id="chart-event-causality" height="260"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Danger Heatmap</span>
+            <button class="help-btn" data-tooltip="Geographic danger intensity: where predator attacks, illness, and deaths concentrate on the map.">?</button>
+          </div>
+          <canvas id="chart-danger-heatmap" height="260"></canvas>
+        </div>
+      </div>
+
+      <!-- Citizen Spotlight (full-width) -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">Citizen Spotlight</span>
+          <button class="help-btn" data-tooltip="Deep dive into a single citizen: their personality, vocabulary, relationships, and life story so far.">?</button>
+        </div>
+        <div id="citizen-spotlight" style="max-height:400px;overflow-y:auto">
+          <span class="muted-text">Select a citizen to spotlight</span>
+        </div>
+      </div>
+
+      <!-- Relationship Drama Feed (full-width) -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">Relationship Drama Feed</span>
+          <button class="help-btn" data-tooltip="Live feed of relationship changes: new bonds, betrayals, rivalries forming, and alliances breaking.">?</button>
+        </div>
+        <div id="drama-feed" style="max-height:300px;overflow-y:auto">
+          <span class="muted-text">No relationship drama yet</span>
+        </div>
+      </div>
+
+      <!-- Prediction Engine (full-width) -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">Prediction Engine</span>
+          <button class="help-btn" data-tooltip="AI-generated predictions about what will happen next: language milestones, deaths, relationship changes.">?</button>
+        </div>
+        <div id="prediction-engine">
+          <span class="muted-text">Gathering data for predictions...</span>
+        </div>
+      </div>
+
+      <!-- Environmental Storytelling (full-width) -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">Environmental Storytelling</span>
+          <button class="help-btn" data-tooltip="Narrative summaries of how the environment shapes citizen behavior and language development.">?</button>
+        </div>
+        <div id="env-storytelling" style="max-height:300px;overflow-y:auto">
+          <span class="muted-text">No environmental stories yet</span>
+        </div>
+      </div>
+
+      <!-- Consciousness Scores (full-width) -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">Consciousness Scores</span>
+          <button class="help-btn" data-tooltip="Composite score measuring each citizen's awareness: vocabulary size, relationship count, survival skill, and communication success.">?</button>
+        </div>
+        <canvas id="chart-consciousness" height="280"></canvas>
+      </div>
+
+      <!-- Proto-grammar Log (full-width) -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">Proto-grammar Log</span>
+          <button class="help-btn" data-tooltip="Detected multi-word combinations that hint at emerging grammar: word order patterns, repeated phrases, proto-sentences.">?</button>
+        </div>
+        <div id="proto-grammar-log" style="max-height:250px;overflow-y:auto">
+          <span class="muted-text">No grammar patterns detected yet</span>
+        </div>
+      </div>
+
+      <!-- Map Time-lapse Controls (full-width) -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">Map Time-lapse Controls</span>
+          <button class="help-btn" data-tooltip="Replay the world map over time: watch citizens move, territories shift, and language spread geographically.">?</button>
+        </div>
+        <div id="timelapse-controls" class="timelapse-controls">
+          <button class="timelapse-play-btn" id="timelapse-play">&#9654; Play</button>
+          <label class="timelapse-speed-label" for="timelapse-speed">Speed</label>
+          <input type="range" id="timelapse-speed" class="timelapse-speed-slider" min="1" max="10" value="5">
+          <span class="timelapse-speed-value" id="timelapse-speed-value">5x</span>
+          <span class="timelapse-tick-display" id="timelapse-tick-display">Tick: --</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========== PROTO-SOUNDS TAB ========== -->
+    <section class="tab-pane" id="tab-proto-sounds">
+
+      <!-- HERO -->
+      <div class="ps-hero">
+        <div class="ps-hero-bg"></div>
+        <div class="ps-hero-body">
+          <div class="ps-eyebrow">World Rebirth Simulator · ElevenLabs Audio Lab</div>
+          <h1 class="ps-h1">If The World Ended,<br>How Would We <em>Start Again?</em></h1>
+          <p class="ps-lead">
+            Thirty AI minds wake up with no language, no culture, no history.<br>
+            They must survive. To survive, they must communicate.<br>
+            What you hear below is what they invented.
+          </p>
+          <div class="ps-hero-counts">
+            <div class="ps-hcount"><span id="ps-n-sounds" class="ps-hcount-n">--</span><span class="ps-hcount-l">proto-sounds</span></div>
+            <div class="ps-hcount"><span id="ps-n-clips" class="ps-hcount-n">--</span><span class="ps-hcount-l">audio clips</span></div>
+            <div class="ps-hcount"><span id="ps-n-worlds" class="ps-hcount-n">--</span><span class="ps-hcount-l">worlds run</span></div>
+          </div>
+        </div>
+        <div class="ps-el-panel">
+          <div class="ps-el-logo-row">
+            <div class="ps-el-icon-wrap">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2ZM17 7h-2a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z" fill="currentColor"/></svg>
+            </div>
+            <div>
+              <div class="ps-el-poweredby">Voice synthesis by</div>
+              <div class="ps-el-brand">ElevenLabs</div>
+            </div>
+          </div>
+          <p class="ps-el-desc">Every proto-sound you hear was given real breath and weight by ElevenLabs AI — the world's most expressive text-to-speech. Each word synthesized to match the phonetic character of its speaker.</p>
+          <a class="ps-el-cta" href="https://elevenlabs.io" target="_blank" rel="noopener">Explore ElevenLabs →</a>
+        </div>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="ps-controls">
+        <div class="ps-filter-row" id="ps-filters">
+          <button class="ps-f active" data-f="ALL">All Sounds</button>
+          <button class="ps-f" data-f="GREETING">Greeting</button>
+          <button class="ps-f" data-f="DANGER">Danger</button>
+          <button class="ps-f" data-f="FOOD">Food</button>
+          <button class="ps-f" data-f="PAIN">Pain</button>
+          <button class="ps-f" data-f="SELF">Self</button>
+        </div>
+        <div class="ps-sort-row">
+          <span class="ps-sort-lbl">Sort</span>
+          <select id="ps-sort" class="ps-sort-sel">
+            <option value="newest">Newest First</option>
+            <option value="spread">Most Speakers</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- SOUND GRID -->
+      <div class="ps-grid" id="ps-grid">
+        <div class="ps-empty">
+          <div class="ps-empty-pulse">◉</div>
+          <p>Waiting for the first sounds of a new world...</p>
+        </div>
+      </div>
+
+      <!-- WORLD HISTORY -->
+      <div class="ps-worlds-section">
+        <div class="ps-worlds-header">
+          <h2 class="ps-worlds-title">Language Across Worlds</h2>
+          <p class="ps-worlds-sub">Each world ends. Each world begins. Language emerges differently every time — same minds, new words.</p>
+        </div>
+        <div class="ps-worlds-list" id="ps-worlds-list"></div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Tooltip element (positioned via JS) -->
+  <div id="tooltip" class="tooltip"></div>
+
+  <!-- Error Banner -->
+  <div id="error-banner" class="error-banner"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

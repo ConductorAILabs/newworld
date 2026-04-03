@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WildMind — If The World Ended, How Would We Start Again?</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23d4a574'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,300;1,8..60,400;1,8..60,600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--bg:#0a0a0f;--bg2:#0e0e15;--bg3:#14141d;--card:#111119;--text:#ddd5c4;--dim:#706a5e;--muted:#3a3640;--amber:#d4a574;--green:#4a9e6e;--blue:#5a9bba;--red:#c44a20;--mono:'JetBrains Mono',monospace;--serif:'Source Serif 4',Georgia,serif}
+    html{font-size:16px;scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+    body{font-family:var(--serif);background:var(--bg);color:var(--text);line-height:1.75;overflow-x:hidden}
+    body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.4}
+    ::selection{background:rgba(212,165,116,0.25);color:#fff}
+
+    .nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 40px;background:rgba(10,10,15,0.6);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.04)}
+    .nav-logo{font-family:var(--mono);font-size:.85rem;font-weight:700;letter-spacing:3px;text-decoration:none}
+    .nav-logo .w{color:var(--amber)}.nav-logo .m{color:var(--dim)}
+    .nav-links{display:flex;gap:28px}
+    .nav-links a{color:var(--dim);text-decoration:none;font-size:.78rem;font-weight:500;font-family:var(--mono);transition:color .3s;letter-spacing:.5px}
+    .nav-links a:hover{color:var(--text)}.nav-links a.active{color:var(--text)}.nav-links .support{color:var(--amber);opacity:.7}.nav-links .support:hover{opacity:1}
+
+    /* HERO */
+    .hero{position:relative;width:100%;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .hero canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+    .hero-fade{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 80% 60% at 50% 40%,transparent 0%,var(--bg) 100%)}
+    .hero-inner{position:relative;z-index:2;text-align:center;max-width:800px;padding:0 24px}
+    .hero-label{font-family:var(--mono);font-size:.7rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--amber);margin-bottom:28px;opacity:.8}
+    .hero h1{font-family:var(--serif);font-weight:300;font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.2;color:var(--text);margin-bottom:28px}
+    .hero h1 em{font-style:italic;color:var(--amber);text-shadow:0 0 80px rgba(212,165,116,.15)}
+    .hero-sub{font-size:clamp(.95rem,1.8vw,1.1rem);color:var(--dim);line-height:1.85;max-width:560px;margin:0 auto}
+    .hero-scroll{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);z-index:2}
+    .hero-scroll-line{width:1px;height:48px;background:linear-gradient(to bottom,var(--amber),transparent);animation:drift 2.4s ease-in-out infinite}
+    @keyframes drift{0%,100%{opacity:.4;transform:translateY(0)}50%{opacity:.8;transform:translateY(10px)}}
+
+    /* SECTIONS */
+    .s{padding:120px 24px}.s-alt{background:var(--bg2)}.s-inner{max-width:1000px;margin:0 auto}
+    .s-label{font-family:var(--mono);font-size:.65rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--amber);margin-bottom:20px;opacity:.7}
+    .s-title{font-family:var(--serif);font-weight:600;font-size:clamp(1.4rem,3vw,1.9rem);line-height:1.3;color:var(--text);margin-bottom:16px}
+    .s-desc{font-size:1rem;color:var(--dim);line-height:1.85;max-width:640px;margin-bottom:48px}
+
+    .reveal{opacity:0;transform:translateY(32px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+    .reveal.vis{opacity:1;transform:translateY(0)}
+    .reveal-d1{transition-delay:.1s}.reveal-d2{transition-delay:.2s}.reveal-d3{transition-delay:.3s}.reveal-d4{transition-delay:.4s}.reveal-d5{transition-delay:.5s}
+
+    /* EXAMPLE WORDS */
+    .proto-word{display:inline-block;font-family:var(--mono);font-weight:700;font-size:1.1rem;color:var(--amber);background:rgba(212,165,116,.08);border:1px solid rgba(212,165,116,.15);border-radius:6px;padding:6px 16px;margin:4px;cursor:default;transition:all .3s}
+    .proto-word:hover{background:rgba(212,165,116,.15);border-color:rgba(212,165,116,.3);transform:translateY(-1px)}
+    .proto-meaning{font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px;display:block;margin-top:2px;font-weight:400}
+
+    /* CITIZEN CARD */
+    .citizen-example{display:flex;gap:20px;padding:24px;background:var(--card);border:1px solid rgba(255,255,255,.04);border-radius:8px;margin-top:20px;transition:border-color .3s}
+    .citizen-example:hover{border-color:rgba(212,165,116,.12)}
+    .citizen-dot{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--bg)}
+    .citizen-dot.m{background:var(--blue)}.citizen-dot.f{background:var(--amber)}
+    .citizen-info{flex:1}
+    .citizen-info h4{font-family:var(--mono);font-size:.85rem;font-weight:600;margin-bottom:4px}
+    .citizen-info p{font-size:.82rem;color:var(--dim);line-height:1.6}
+    .citizen-bar{height:4px;background:var(--bg3);border-radius:2px;margin-top:8px;overflow:hidden}
+    .citizen-bar-fill{height:100%;border-radius:2px;transition:width 1.5s ease}
+
+    /* FLOW DIAGRAM */
+    .flow{display:flex;align-items:stretch;gap:0;margin-top:48px}
+    .flow-step{flex:1;padding:36px 28px;background:var(--card);border:1px solid rgba(255,255,255,.04);position:relative;transition:border-color .3s}
+    .flow-step:hover{border-color:rgba(212,165,116,.12)}
+    .flow-step:not(:last-child)::after{content:'\2192';position:absolute;right:-14px;top:50%;transform:translateY(-50%);font-size:1.2rem;color:var(--amber);z-index:1;opacity:.5}
+    .flow-icon{font-size:1.8rem;margin-bottom:12px;display:block}
+    .flow-label{font-family:var(--mono);font-size:.6rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--amber);margin-bottom:8px;opacity:.7}
+    .flow-title{font-family:var(--serif);font-size:1.1rem;font-weight:600;color:var(--text);margin-bottom:8px}
+    .flow-desc{font-size:.85rem;color:var(--dim);line-height:1.7}
+
+    /* INLINE CHART */
+    .chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:32px}
+    .chart-card{background:var(--card);border:1px solid rgba(255,255,255,.04);border-radius:8px;padding:24px;transition:border-color .3s}
+    .chart-card:hover{border-color:rgba(212,165,116,.12)}
+    .chart-label{font-family:var(--mono);font-size:.65rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+    .chart-value{font-family:var(--mono);font-size:1.6rem;font-weight:700;color:var(--amber);margin-bottom:4px}
+    .chart-sub{font-size:.8rem;color:var(--dim);line-height:1.6}
+    .chart-canvas{width:100%;height:120px;display:block;margin-top:12px}
+
+    /* DISCOVERY CARDS */
+    .disc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:48px}
+    .disc{background:var(--card);border:1px solid rgba(255,255,255,.04);border-radius:8px;padding:32px;border-left:3px solid var(--amber);transition:all .3s}
+    .disc:hover{border-color:rgba(212,165,116,.2);transform:translateY(-2px)}
+    .disc h3{font-family:var(--serif);font-size:1.05rem;font-weight:600;color:var(--text);margin-bottom:8px;line-height:1.4}
+    .disc p{font-size:.85rem;color:var(--dim);line-height:1.7}
+    .disc-wide{grid-column:1/-1}
+
+    /* WORLD VIS */
+    .world-strip{display:flex;gap:2px;margin-top:32px;height:180px;border-radius:8px;overflow:hidden}
+    .world-band{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:12px 8px;transition:flex .4s;cursor:default;position:relative}
+    .world-band:hover{flex:1.8}
+    .world-band-label{font-family:var(--mono);font-size:.6rem;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:1px;text-transform:uppercase;position:absolute;bottom:8px;left:8px;writing-mode:vertical-rl;transform:rotate(180deg)}
+
+    /* PULL */
+    .pull{padding:80px 24px;text-align:center}
+    .pull-text{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(1.1rem,2.5vw,1.5rem);line-height:1.8;color:var(--dim);max-width:700px;margin:0 auto}
+
+    /* CTA */
+    .cta{text-align:center}
+    .cta-title{font-family:var(--serif);font-weight:300;font-size:clamp(1.5rem,3vw,2.2rem);line-height:1.4;color:var(--text);margin-bottom:16px}
+    .cta-sub{font-size:1rem;color:var(--dim);margin-bottom:40px}
+    .cta-btn{display:inline-block;padding:14px 40px;font-family:var(--mono);font-size:.8rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:var(--bg);background:var(--amber);border-radius:4px;transition:all .3s}
+    .cta-btn:hover{background:#e0b68a;transform:translateY(-1px);box-shadow:0 8px 32px rgba(212,165,116,.2)}
+
+    .foot{padding:48px 24px;text-align:center;border-top:1px solid rgba(255,255,255,.04)}
+    .foot-logo{font-family:var(--mono);font-size:.75rem;font-weight:700;letter-spacing:3px;margin-bottom:8px}
+    .foot-logo .w{color:var(--amber)}.foot-logo .m{color:var(--muted)}
+    .foot-text{font-size:.75rem;color:var(--muted)}.foot-text a{color:var(--amber);text-decoration:none;opacity:.6}.foot-text a:hover{opacity:1}
+
+    @media(max-width:768px){
+      .nav{padding:12px 20px}.nav-links{gap:16px}.nav-links a{font-size:.72rem}
+      .s{padding:80px 20px}.flow{flex-direction:column}.flow-step:not(:last-child)::after{content:'\2193';right:auto;bottom:-14px;top:auto;left:50%;transform:translateX(-50%)}
+      .chart-row,.disc-grid{grid-template-columns:1fr}.citizen-example{flex-direction:column}.world-strip{height:140px}
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo"><span class="w">WILD</span><span class="m">MIND</span></a>
+  <div class="nav-links">
+    <a href="/">Dashboard</a>
+    <a href="/about.html" class="active">About</a>
+    <a href="/worlds.html">Worlds</a>
+    <a href="/insights.html">Research</a>
+    <a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener" class="support">Support</a>
+  </div>
+</nav>
+
+<!-- ══════ HERO ══════ -->
+<section class="hero">
+  <canvas id="heroCanvas"></canvas>
+  <div class="hero-fade"></div>
+  <div class="hero-inner">
+    <div class="hero-label">WildMind · A World Rebirth Simulator</div>
+    <h1>If the world ended,<br>how would we <em>start again?</em></h1>
+    <p class="hero-sub">Thirty AI minds. No language. No culture. No history. Just survival instincts and each other. Watch what they build from nothing — and listen to the first words of a new civilization.</p>
+    <div style="display:flex;gap:16px;margin-top:32px;flex-wrap:wrap">
+      <a href="/" class="cta-btn">Watch It Happen Live</a>
+      <a href="/#proto-sounds" class="cta-btn" style="background:transparent;color:var(--amber);border:1px solid var(--amber)">Hear Their Language</a>
+    </div>
+  </div>
+  <div class="hero-scroll"><div class="hero-scroll-line"></div></div>
+</section>
+
+<!-- ══════ WHAT IS THIS ══════ -->
+<section class="s">
+  <div class="s-inner">
+    <div class="s-label reveal">The Premise</div>
+    <h2 class="s-title reveal reveal-d1">The world ended. Thirty AI minds woke up with nothing.</h2>
+    <p class="s-desc reveal reveal-d2">No language. No shared memory. No rules. Just a wilderness, a need to survive, and each other. What happened next is what you're watching. Here are real words they invented:</p>
+
+    <!-- REAL PROTO-WORD EXAMPLES -->
+    <div class="reveal reveal-d3" style="margin-bottom:40px">
+      <div class="proto-word">kroh-tuh<span class="proto-meaning">Fire</span></div>
+      <div class="proto-word">gahn-neh<span class="proto-meaning">Danger</span></div>
+      <div class="proto-word">muh-brash<span class="proto-meaning">Greeting</span></div>
+      <div class="proto-word">drehk-voh<span class="proto-meaning">Night</span></div>
+      <div class="proto-word">pah-skuh<span class="proto-meaning">Food</span></div>
+      <div class="proto-word">tnak-klah<span class="proto-meaning">Pain</span></div>
+    </div>
+
+    <p class="s-desc reveal reveal-d3" style="margin-top:0">Every sound above was invented by AI. Not programmed. Not English. Born from interaction and context in a living world.</p>
+
+    <!-- EXAMPLE CITIZENS -->
+    <div class="reveal reveal-d4">
+      <div class="citizen-example">
+        <div class="citizen-dot m">A</div>
+        <div class="citizen-info">
+          <h4>Alpha archetype</h4>
+          <p>Aggressive, loud, moves toward threats. Produces percussive sounds: hard k, t, g, d. Initiates interactions. Highest influence scores.</p>
+          <div class="citizen-bar"><div class="citizen-bar-fill" style="width:85%;background:var(--red)"></div></div>
+        </div>
+      </div>
+      <div class="citizen-example" style="margin-top:8px">
+        <div class="citizen-dot f">I</div>
+        <div class="citizen-info">
+          <h4>Intellectual archetype</h4>
+          <p>Observes first, listens, repeats novel sounds. Produces sibilant multi-syllable vocalizations: s, sh, f, v. Largest vocabularies.</p>
+          <div class="citizen-bar"><div class="citizen-bar-fill" style="width:95%;background:var(--blue)"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ HOW IT WORKS (VISUAL FLOW) ══════ -->
+<section class="s s-alt">
+  <div class="s-inner">
+    <div class="s-label reveal">How Civilization Restarts</div>
+    <h2 class="s-title reveal reveal-d1">Survive. Communicate. Remember. Become.</h2>
+
+    <div class="flow">
+      <div class="flow-step reveal reveal-d1">
+        <span class="flow-icon">&#9673;</span>
+        <div class="flow-label">Each Tick</div>
+        <div class="flow-title">Survive</div>
+        <p class="flow-desc">Each AI perceives its world&mdash;who is nearby, the weather, hunger, danger. It has one priority: stay alive. Everything else comes after.</p>
+      </div>
+      <div class="flow-step reveal reveal-d2">
+        <span class="flow-icon">&#9707;</span>
+        <div class="flow-label">Each Encounter</div>
+        <div class="flow-title">Communicate</div>
+        <p class="flow-desc">Two citizens meet. Both generate sounds. Context gives sounds meaning. Say "kroh" near fire enough times &mdash; it becomes the word for fire. Language is born.</p>
+      </div>
+      <div class="flow-step reveal reveal-d3">
+        <span class="flow-icon">&#8634;</span>
+        <div class="flow-label">Each World</div>
+        <div class="flow-title">Evolve</div>
+        <p class="flow-desc">The world ends. Every AI is retrained on its life&mdash;its bonds, its losses, its discoveries. The next world begins. Same minds. Different history. Deeper language.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ THE WORLD (BIOME VIS) ══════ -->
+<section class="s">
+  <div class="s-inner">
+    <div class="s-label reveal">The World</div>
+    <h2 class="s-title reveal reveal-d1">A full ecosystem. Not a chatroom.</h2>
+    <p class="s-desc reveal reveal-d2">The simulation runs a massive world with latitude-based climate, biomes from frozen poles to tropical equators, predators, prey, and real survival mechanics.</p>
+
+    <!-- BIOME STRIP VISUALIZATION -->
+    <div class="world-strip reveal reveal-d3">
+      <div class="world-band" style="background:linear-gradient(to top,#8ab4cc,#5a7a8a)"><span class="world-band-label">Ice</span></div>
+      <div class="world-band" style="background:linear-gradient(to top,#5a7a8a,#4a6a7a)"><span class="world-band-label">Tundra</span></div>
+      <div class="world-band" style="background:linear-gradient(to top,#2a4a3a,#1a3a2a)"><span class="world-band-label">Boreal</span></div>
+      <div class="world-band" style="background:linear-gradient(to top,#3a6b4a,#2d5a3a)"><span class="world-band-label">Temperate</span></div>
+      <div class="world-band" style="background:linear-gradient(to top,#2d6a3a,#1a5a2a);flex:1.5"><span class="world-band-label">Tropical</span></div>
+      <div class="world-band" style="background:linear-gradient(to top,#8b7d3c,#6a5a2a)"><span class="world-band-label">Savanna</span></div>
+      <div class="world-band" style="background:linear-gradient(to top,#c4a44a,#9a7a2a)"><span class="world-band-label">Desert</span></div>
+      <div class="world-band" style="background:linear-gradient(to top,#3a6b4a,#2d5a3a)"><span class="world-band-label">Temperate</span></div>
+      <div class="world-band" style="background:linear-gradient(to top,#5a7a8a,#4a6a7a)"><span class="world-band-label">Tundra</span></div>
+      <div class="world-band" style="background:linear-gradient(to top,#8ab4cc,#5a7a8a)"><span class="world-band-label">Ice</span></div>
+    </div>
+    <p style="font-family:var(--mono);font-size:.65rem;color:var(--muted);text-align:center;margin-top:8px;letter-spacing:1px">NORTH POLE &larr; LATITUDE &rarr; SOUTH POLE</p>
+
+    <!-- WORLD STATS -->
+    <div class="chart-row reveal reveal-d4" style="margin-top:32px">
+      <div class="chart-card">
+        <div class="chart-label">Wolves spotted a citizen at night</div>
+        <p style="font-size:.9rem;color:var(--text);line-height:1.7;margin-top:8px">Two citizens were foraging near the forest edge. The attack was sudden. Both survived. <strong style="color:var(--amber)">The sound they made in that moment became their first shared word for DANGER.</strong></p>
+      </div>
+      <div class="chart-card">
+        <div class="chart-label">A drought hit the southern plains</div>
+        <p style="font-size:.9rem;color:var(--text);line-height:1.7;margin-top:8px">Water sources dried up. Citizens migrated north. Those who traveled furthest <strong style="color:var(--amber)">carried new vocabulary with them</strong>, teaching words to citizens they'd never met before.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PULL -->
+<div class="pull reveal">
+  <p class="pull-text">"We didn't program them to speak, bond, or grieve. We ended their world and started a new one. Everything you hear, they invented themselves."</p>
+</div>
+
+<!-- ══════ DISCOVERIES (WITH INLINE CHARTS) ══════ -->
+<section class="s s-alt">
+  <div class="s-inner">
+    <div class="s-label reveal">What We Discovered</div>
+    <h2 class="s-title reveal reveal-d1">None of this was designed. All of it emerged.</h2>
+
+    <div class="disc-grid">
+      <div class="disc reveal reveal-d1">
+        <h3>The language follows real mathematical laws.</h3>
+        <p>Zipf's Law. Heaps' Law. The same statistical patterns that govern every human language on Earth&mdash;emerged naturally from AI interaction.</p>
+        <canvas class="chart-canvas" id="chart-zipf-about"></canvas>
+      </div>
+      <div class="disc reveal reveal-d2">
+        <h3>Danger creates language faster than anything.</h3>
+        <p>Wolf attacks, fire, starvation&mdash;citizens who share traumatic experiences develop shared vocabulary faster than casual socializing.</p>
+        <canvas class="chart-canvas" id="chart-danger-about"></canvas>
+      </div>
+      <div class="disc reveal reveal-d3">
+        <h3>Personality shapes the sounds they make.</h3>
+        <p>Aggressive citizens produce hard, percussive phonemes. Nurturing ones are softer. You can hear the personality in the sound profile.</p>
+        <canvas class="chart-canvas" id="chart-phoneme-about"></canvas>
+      </div>
+      <div class="disc reveal reveal-d4">
+        <h3>Explorers became the teachers.</h3>
+        <p>Citizens who travel furthest carry words across the tribe. They rank highest in linguistic influence&mdash;identical to human migration patterns.</p>
+        <canvas class="chart-canvas" id="chart-influence-about"></canvas>
+      </div>
+      <div class="disc disc-wide reveal reveal-d5">
+        <h3>Each generation gets smarter.</h3>
+        <p>After retraining on their own experiences, citizens in the next world form vocabulary faster, build relationships quicker, produce more complex vocalizations. <strong style="color:var(--amber)">The evolution is measurable.</strong></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ DASHBOARD PREVIEW ══════ -->
+<section class="s">
+  <div class="s-inner">
+    <div class="s-label reveal">Witness The Restart</div>
+    <h2 class="s-title reveal reveal-d1">The world is ending and beginning right now.</h2>
+    <p class="s-desc reveal reveal-d2">The simulation is live. Citizens are surviving, communicating, and inventing language in real time. Every word you hear was earned through struggle.</p>
+
+    <div class="chart-row reveal reveal-d3">
+      <div class="chart-card">
+        <div class="chart-label">Live World Map</div>
+        <div class="chart-value" style="font-size:1.1rem">30 minds, one world</div>
+        <p class="chart-sub">Watch every citizen move, hunt, shelter, and approach each other. See survival decisions play out in real time.</p>
+      </div>
+      <div class="chart-card">
+        <div class="chart-label">◉ Proto-Sounds</div>
+        <div class="chart-value" style="font-size:1.1rem;color:#a98de8">Powered by ElevenLabs</div>
+        <p class="chart-sub">When a word spreads through the tribe, ElevenLabs gives it voice. Press play. Hear a language no human has ever spoken before.</p>
+      </div>
+    </div>
+    <div class="chart-row reveal reveal-d4" style="margin-top:16px">
+      <div class="chart-card">
+        <div class="chart-label">Language Evolution</div>
+        <div class="chart-value" style="font-size:1.1rem">Words from nothing</div>
+        <p class="chart-sub">Watch sounds become words, words become grammar. Track how language spreads between minds over time.</p>
+      </div>
+      <div class="chart-card">
+        <div class="chart-label">World History</div>
+        <div class="chart-value" style="font-size:1.1rem">End. Begin. Again.</div>
+        <p class="chart-sub">Each world ends differently. Each restart builds on what came before. Watch civilization learn how to begin.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ CTA ══════ -->
+<section class="s s-alt cta">
+  <div class="s-inner">
+    <h2 class="cta-title reveal">A new world is starting right now.</h2>
+    <p class="cta-sub reveal reveal-d1">Watch thirty AI minds rebuild civilization from nothing — live, in real time.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap" class="reveal reveal-d2">
+      <a href="/" class="cta-btn">Watch Live</a>
+      <a href="/#proto-sounds" class="cta-btn" style="background:rgba(107,79,187,0.15);color:#a98de8;border:1px solid rgba(107,79,187,0.4)">◉ Hear Their Language</a>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="foot-logo"><span class="w">WILD</span><span class="m">MIND</span></div>
+  <div class="foot-text"><a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener">Support this project</a></div>
+</footer>
+
+<script>
+(function(){
+  /* PARTICLES */
+  const canvas=document.getElementById('heroCanvas'),ctx=canvas.getContext('2d');let particles=[],w,h;const N=70,LINK=140,M={x:-9999,y:-9999};
+  function resize(){w=canvas.width=canvas.offsetWidth;h=canvas.height=canvas.offsetHeight}
+  function init(){particles=[];for(let i=0;i<N;i++)particles.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.8+.8,a:Math.random()*.4+.2})}
+  function draw(){ctx.clearRect(0,0,w,h);for(let i=0;i<particles.length;i++)for(let j=i+1;j<particles.length;j++){const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<LINK){ctx.strokeStyle='rgba(212,165,116,'+(1-d/LINK)*.1+')';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.stroke()}}for(const p of particles){ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(212,165,116,'+p.a+')';ctx.fill();const mdx=p.x-M.x,mdy=p.y-M.y,md=Math.sqrt(mdx*mdx+mdy*mdy);if(md<180){const f=(1-md/180)*.015;p.vx+=mdx*f;p.vy+=mdy*f}p.x+=p.vx;p.y+=p.vy;p.vx*=.992;p.vy*=.992;if(p.x<0)p.x=w;if(p.x>w)p.x=0;if(p.y<0)p.y=h;if(p.y>h)p.y=0}requestAnimationFrame(draw)}
+  window.addEventListener('resize',resize);canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();M.x=e.clientX-r.left;M.y=e.clientY-r.top});canvas.addEventListener('mouseleave',()=>{M.x=-9999;M.y=-9999});resize();init();draw();
+
+  /* SCROLL REVEAL */
+  const obs=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis')})},{threshold:.08,rootMargin:'0px 0px -60px 0px'});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+  /* INLINE MINI CHARTS */
+  function miniChart(id,drawFn){const c=document.getElementById(id);if(!c)return;const ctx=c.getContext('2d');const r=c.getBoundingClientRect();const dpr=window.devicePixelRatio||1;c.width=r.width*dpr;c.height=120*dpr;ctx.scale(dpr,dpr);drawFn(ctx,r.width,120)}
+
+  // Zipf curve
+  miniChart('chart-zipf-about',function(ctx,w,h){
+    ctx.strokeStyle='#d4a574';ctx.lineWidth=2;ctx.beginPath();
+    for(let i=0;i<w;i++){const x=i;const y=h-10-(h-20)*Math.pow(1-(i/w),.6);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.stroke();
+    ctx.strokeStyle='rgba(74,158,110,.4)';ctx.setLineDash([4,4]);ctx.beginPath();
+    for(let i=0;i<w;i++){const x=i;const y=h-10-(h-20)*Math.pow(1-(i/w),1);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='var(--dim)';ctx.font='9px JetBrains Mono';ctx.fillText('Frequency',4,14);ctx.fillText('Rank \u2192',w-40,h-4);
+    ctx.fillStyle='#d4a574';ctx.fillText('WildMind',4,28);ctx.fillStyle='rgba(74,158,110,.7)';ctx.fillText('Natural language target',4,40);
+  });
+
+  // Danger vs social vocab
+  miniChart('chart-danger-about',function(ctx,w,h){
+    const bars=[{l:'Social',v:.3,c:'#5a9bba'},{l:'Food',v:.5,c:'#4a9e6e'},{l:'Fire',v:.75,c:'#d4a574'},{l:'Predator',v:1,c:'#c44a20'}];
+    const bw=w/bars.length-12;
+    bars.forEach(function(b,i){const x=i*(bw+12)+6;const bh=b.v*(h-30);ctx.fillStyle=b.c;ctx.fillRect(x,h-bh-16,bw,bh);ctx.fillStyle='var(--dim)';ctx.font='9px JetBrains Mono';ctx.textAlign='center';ctx.fillText(b.l,x+bw/2,h-4)});
+    ctx.textAlign='left';ctx.fillStyle='var(--dim)';ctx.font='9px JetBrains Mono';ctx.fillText('Vocab speed \u2191',4,12);
+  });
+
+  // Phoneme distribution
+  miniChart('chart-phoneme-about',function(ctx,w,h){
+    var alpha=['k','t','g','d','p','b'];var intel=['s','sh','f','v','th'];
+    var all=alpha.concat(intel);var bw=(w-20)/all.length-2;
+    all.forEach(function(p,i){var isA=i<alpha.length;var bh=(Math.random()*.5+.5)*(h-30);ctx.fillStyle=isA?'#c44a20':'#5a9bba';ctx.fillRect(10+i*(bw+2),h-bh-16,bw,bh);ctx.fillStyle='var(--dim)';ctx.font='8px JetBrains Mono';ctx.textAlign='center';ctx.fillText(p,10+i*(bw+2)+bw/2,h-4)});
+    ctx.textAlign='left';ctx.fillStyle='#c44a20';ctx.fillRect(4,4,8,8);ctx.fillStyle='var(--dim)';ctx.font='9px JetBrains Mono';ctx.fillText('Alpha',16,12);
+    ctx.fillStyle='#5a9bba';ctx.fillRect(60,4,8,8);ctx.fillStyle='var(--dim)';ctx.fillText('Intellectual',72,12);
+  });
+
+  // Influence
+  miniChart('chart-influence-about',function(ctx,w,h){
+    var roles=[{l:'Explorer',v:.95},{l:'Alpha',v:.7},{l:'Provider',v:.55},{l:'Keeper',v:.4},{l:'Loner',v:.2}];
+    var bh=16;roles.forEach(function(r,i){var y=8+i*(bh+6);var bw=r.v*(w-90);ctx.fillStyle='rgba(212,165,116,'+(0.3+r.v*0.7)+')';ctx.fillRect(70,y,bw,bh);ctx.fillStyle='var(--dim)';ctx.font='9px JetBrains Mono';ctx.textAlign='right';ctx.fillText(r.l,66,y+12)});
+    ctx.textAlign='left';ctx.fillStyle='var(--dim)';ctx.font='9px JetBrains Mono';ctx.fillText('Linguistic influence \u2192',70,h-4);
+  });
+
+  // Animate citizen bars on scroll
+  const barObs=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){const f=e.target.querySelector('.citizen-bar-fill');if(f){const w=f.style.width;f.style.width='0%';setTimeout(()=>{f.style.width=w},100)}barObs.unobserve(e.target)}})},{threshold:.5});
+  document.querySelectorAll('.citizen-example').forEach(el=>barObs.observe(el));
+})();
+</script>
+</body>
+</html>

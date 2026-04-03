@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WildMind -- World History</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23d4a574'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,300;1,8..60,400;1,8..60,600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--bg:#0a0a0f;--bg2:#0e0e15;--bg3:#14141d;--card:#111119;--text:#ddd5c4;--dim:#706a5e;--muted:#3a3640;--amber:#d4a574;--green:#4a9e6e;--blue:#5a9bba;--red:#c44a20;--mono:'JetBrains Mono',monospace;--serif:'Source Serif 4',Georgia,serif;--sidebar-w:220px}
+    html{font-size:15px;scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+    body{font-family:var(--serif);background:var(--bg);color:var(--text);line-height:1.65;overflow-x:hidden}
+    body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.4}
+    ::selection{background:rgba(212,165,116,0.25);color:#fff}
+    a{color:var(--amber);text-decoration:none}a:hover{text-decoration:underline}
+
+    /* NAV */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 40px;background:rgba(10,10,15,0.85);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.04)}
+    .nav-logo{font-family:var(--mono);font-size:.85rem;font-weight:700;letter-spacing:3px;text-decoration:none}
+    .nav-logo .w{color:var(--amber)}.nav-logo .m{color:var(--dim)}
+    .nav-links{display:flex;gap:28px}
+    .nav-links a{color:var(--dim);text-decoration:none;font-size:.78rem;font-weight:500;font-family:var(--mono);transition:color .3s;letter-spacing:.5px}
+    .nav-links a:hover{color:var(--text)}.nav-links a.active{color:var(--text)}.nav-links .support{color:var(--amber);opacity:.7}.nav-links .support:hover{opacity:1}
+
+    /* LAYOUT */
+    .page-wrap{display:flex;margin-top:52px;min-height:calc(100vh - 52px)}
+    .sidebar{position:fixed;top:52px;left:0;bottom:0;width:var(--sidebar-w);background:var(--bg2);border-right:1px solid rgba(255,255,255,0.04);overflow-y:auto;padding:20px 0;z-index:50;scrollbar-width:thin;scrollbar-color:var(--muted) transparent}
+    .sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-thumb{background:var(--muted);border-radius:2px}
+    .sb-label{font-family:var(--mono);font-size:.55rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:16px 20px 6px;display:block}
+    .sb-item{display:block;padding:8px 20px;font-family:var(--mono);font-size:.7rem;color:var(--dim);cursor:pointer;border-left:2px solid transparent;line-height:1.6;transition:all .15s;user-select:none}
+    .sb-item:hover{color:var(--text);background:rgba(255,255,255,0.02)}
+    .sb-item.active{color:var(--amber);border-left-color:var(--amber);background:rgba(212,165,116,0.04)}
+    .sb-world-num{font-weight:700;color:var(--text)}
+    .sb-item.active .sb-world-num{color:var(--amber)}
+    .sb-status{display:inline-block;font-size:.55rem;text-transform:uppercase;letter-spacing:1px;padding:1px 5px;border-radius:2px;margin-left:4px;vertical-align:middle}
+    .sb-status.archived{background:rgba(112,106,94,0.15);color:var(--dim)}
+    .sb-status.active,.sb-status.running{background:rgba(74,158,110,0.15);color:var(--green)}
+    .sb-ticks{display:block;font-size:.6rem;color:var(--muted);margin-top:1px}
+    .main{margin-left:var(--sidebar-w);flex:1;padding:32px 40px 80px;max-width:1200px}
+
+    /* LOADING */
+    .loading-overlay{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .5s}
+    .loading-overlay.hidden{opacity:0;pointer-events:none}
+    .loading-bar{width:300px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:16px}
+    .loading-bar-fill{height:100%;background:var(--amber);border-radius:2px;width:0;transition:width .3s}
+    .loading-text{font-family:var(--mono);font-size:.75rem;color:var(--dim);margin-top:10px;letter-spacing:1px}
+
+    /* HEADER */
+    .world-header{margin-bottom:24px}
+    .world-header-title{font-family:var(--serif);font-weight:700;font-size:1.6rem;color:var(--text);margin-bottom:4px}
+    .world-header-sub{font-family:var(--mono);font-size:.72rem;color:var(--dim);letter-spacing:.5px}
+    .status-badge{display:inline-block;font-family:var(--mono);font-size:.6rem;font-weight:700;padding:3px 10px;border-radius:3px;letter-spacing:1px;text-transform:uppercase;margin-left:8px;vertical-align:middle}
+    .status-badge.archived{background:rgba(112,106,94,0.12);color:var(--dim);border:1px solid rgba(112,106,94,0.2)}
+    .status-badge.active,.status-badge.running{background:rgba(74,158,110,0.12);color:var(--green);border:1px solid rgba(74,158,110,0.2)}
+
+    /* SECTIONS */
+    .section{margin-bottom:48px;scroll-margin-top:72px}
+    .section-hdr{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+    .section-num{font-family:var(--mono);font-size:.65rem;font-weight:700;color:var(--amber);opacity:.5;letter-spacing:1px}
+    .section-title{font-family:var(--serif);font-weight:600;font-size:1.2rem;color:var(--text)}
+    .section-divider{border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0 0 16px}
+
+    /* METRIC CARDS */
+    .metrics-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+    .metric-card{background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:14px 16px;transition:border-color .2s}
+    .metric-card:hover{border-color:rgba(212,165,116,0.12)}
+    .metric-label{font-family:var(--mono);font-size:.58rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+    .metric-val{font-family:var(--mono);font-size:1.35rem;font-weight:700;color:var(--amber)}
+    .metric-sub{font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-top:2px}
+    .metric-val.green{color:var(--green)}.metric-val.blue{color:var(--blue)}.metric-val.red{color:var(--red)}
+
+    /* PILLS */
+    .pill-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+    .pill{display:inline-block;font-family:var(--mono);font-size:.68rem;font-weight:500;padding:4px 12px;border-radius:12px;background:rgba(212,165,116,0.08);color:var(--amber);border:1px solid rgba(212,165,116,0.15)}
+
+    /* CHART CONTAINERS */
+    .chart-wrap{background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:20px;margin-bottom:16px}
+    .chart-wrap:hover{border-color:rgba(255,255,255,0.06)}
+    .chart-title{font-family:var(--mono);font-size:.65rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+    .chart-container{position:relative;width:100%}
+    .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+    /* TABLES */
+    table{width:100%;border-collapse:collapse;font-size:.78rem;font-family:var(--mono)}
+    thead th{background:var(--bg2);color:var(--dim);font-weight:600;text-align:left;padding:8px 10px;font-size:.62rem;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);white-space:nowrap}
+    tbody td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.02);color:var(--text);white-space:nowrap}
+    tbody tr:nth-child(even){background:rgba(255,255,255,0.01)}
+    tbody tr:hover{background:rgba(212,165,116,0.03)}
+    .tbl-scroll{max-height:350px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--muted) transparent;border-radius:8px;background:var(--card);border:1px solid rgba(255,255,255,0.04)}
+    .tbl-scroll::-webkit-scrollbar{width:4px}.tbl-scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:2px}
+
+    /* INSIGHT CARDS */
+    .insight-card{background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:16px 18px;margin-bottom:10px;border-left:3px solid var(--amber);transition:border-color .2s}
+    .insight-card:hover{border-color:rgba(212,165,116,0.2)}
+    .insight-type{display:inline-block;font-family:var(--mono);font-size:.58rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:3px;margin-bottom:6px}
+    .insight-type.training{background:rgba(90,155,186,0.12);color:var(--blue)}
+    .insight-type.behavior{background:rgba(74,158,110,0.12);color:var(--green)}
+    .insight-type.language{background:rgba(212,165,116,0.12);color:var(--amber)}
+    .insight-type.social{background:rgba(196,74,32,0.12);color:var(--red)}
+    .insight-desc{font-size:.85rem;color:var(--text);line-height:1.7}
+
+    /* RECOMMENDATION CARDS */
+    .rec-card{background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:16px 18px;margin-bottom:10px;transition:border-color .2s}
+    .rec-card:hover{border-color:rgba(255,255,255,0.08)}
+    .rec-priority{display:inline-block;font-family:var(--mono);font-size:.55rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:3px;margin-bottom:6px}
+    .rec-priority.high{background:rgba(196,74,32,0.15);color:var(--red);border:1px solid rgba(196,74,32,0.25)}
+    .rec-priority.medium{background:rgba(212,165,116,0.12);color:var(--amber);border:1px solid rgba(212,165,116,0.2)}
+    .rec-priority.low{background:rgba(74,158,110,0.12);color:var(--green);border:1px solid rgba(74,158,110,0.2)}
+    .rec-desc{font-size:.85rem;color:var(--text);line-height:1.7;margin-bottom:4px}
+    .rec-action{font-family:var(--mono);font-size:.7rem;color:var(--dim);line-height:1.6}
+
+    /* EMPTY STATE */
+    .empty-state{text-align:center;padding:60px 20px;color:var(--dim);font-family:var(--mono);font-size:.8rem}
+
+    /* FOOTER */
+    .foot{padding:40px;text-align:center;border-top:1px solid rgba(255,255,255,0.04);margin-left:var(--sidebar-w)}
+    .foot-logo{font-family:var(--mono);font-size:.75rem;font-weight:700;letter-spacing:3px;margin-bottom:6px}
+    .foot-logo .w{color:var(--amber)}.foot-logo .m{color:var(--muted)}
+    .foot-text{font-size:.7rem;color:var(--muted);font-family:var(--mono)}.foot-text a{color:var(--amber);text-decoration:none;opacity:.6}.foot-text a:hover{opacity:1}
+
+    /* MOBILE */
+    .mobile-toggle{display:none;position:fixed;bottom:20px;right:20px;z-index:110;width:44px;height:44px;border-radius:50%;background:var(--amber);color:var(--bg);font-size:1.2rem;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.4);font-family:var(--mono);font-weight:700}
+    @media(max-width:900px){
+      .sidebar{transform:translateX(-100%);transition:transform .3s;width:260px}
+      .sidebar.open{transform:translateX(0)}
+      .main{margin-left:0;padding:24px 16px 80px}
+      .foot{margin-left:0}
+      .mobile-toggle{display:flex;align-items:center;justify-content:center}
+      .chart-grid{grid-template-columns:1fr}
+      .metrics-row{grid-template-columns:repeat(2,1fr)}
+      .nav{padding:12px 16px}.nav-links{gap:14px}.nav-links a{font-size:.7rem}
+    }
+    @media(max-width:500px){.metrics-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo"><span class="w">WILD</span><span class="m">MIND</span></a>
+  <div class="nav-links">
+    <a href="/">Dashboard</a>
+    <a href="/about.html">About</a>
+    <a href="/insights.html">Insights</a>
+    <a href="/worlds.html" class="active">Worlds</a>
+    <a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener" class="support">Support</a>
+  </div>
+</nav>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="nav-logo"><span class="w">WILD</span><span class="m">MIND</span></div>
+  <div class="loading-bar"><div class="loading-bar-fill" id="loadingBar"></div></div>
+  <div class="loading-text" id="loadingText">Initializing...</div>
+</div>
+
+<div class="page-wrap">
+  <div class="sidebar" id="sidebar">
+    <span class="sb-label">Worlds</span>
+    <div id="sidebarList"></div>
+  </div>
+  <div class="main" id="mainPanel">
+    <div class="empty-state" id="emptyState">Select a world from the sidebar to view its history.</div>
+  </div>
+</div>
+
+<button class="mobile-toggle" id="mobileToggle">W</button>
+
+<footer class="foot" id="footer" style="display:none">
+  <div class="foot-logo"><span class="w">WILD</span><span class="m">MIND</span></div>
+  <div class="foot-text">Proto-language emergence through emergent AI civilisation</div>
+</footer>
+
+<script>
+(function() {
+  "use strict";
+
+  /* ── Helpers ──────────────────────────────────────────────────────── */
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    return e;
+  }
+  function txt(parent, t) { parent.textContent = t; return parent; }
+  function setProgress(pct, msg) {
+    $("loadingBar").style.width = pct + "%";
+    $("loadingText").textContent = msg;
+  }
+  function safe(v, fallback) { return (v != null && v !== "") ? v : (fallback != null ? fallback : "--"); }
+  function num(v) { return (v != null && !isNaN(v)) ? v.toLocaleString() : "--"; }
+  function pct(v) {
+    if (v == null || isNaN(v)) return "--";
+    return (v * 100).toFixed(1) + "%";
+  }
+  function fmtDate(d) {
+    if (!d) return "--";
+    try { return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }); }
+    catch(e) { return String(d); }
+  }
+
+  /* ── API ──────────────────────────────────────────────────────────── */
+  var API_KEY = (function() {
+    var m = document.querySelector('meta[name="api-key"]');
+    if (m) return m.getAttribute("content");
+    var p = new URLSearchParams(window.location.search);
+    return p.get("key") || "";
+  })();
+
+  function apiFetch(url) {
+    var opts = {};
+    if (API_KEY) opts.headers = { "x-api-key": API_KEY };
+    return fetch(url, opts);
+  }
+
+  /* ── State ────────────────────────────────────────────────────────── */
+  var DATA = null;
+  var selectedWorldId = null;
+  var chartInstances = {};
+
+  /* ── Chart defaults ───────────────────────────────────────────────── */
+  var chartColors = {
+    amber: "rgba(212,165,116,0.85)",
+    amberBg: "rgba(212,165,116,0.15)",
+    green: "rgba(74,158,110,0.85)",
+    greenBg: "rgba(74,158,110,0.15)",
+    blue: "rgba(90,155,186,0.85)",
+    blueBg: "rgba(90,155,186,0.15)",
+    red: "rgba(196,74,32,0.85)",
+    redBg: "rgba(196,74,32,0.15)",
+    dim: "rgba(112,106,94,0.5)",
+    grid: "rgba(255,255,255,0.04)",
+    gridLabel: "rgba(112,106,94,0.7)"
+  };
+
+  function chartDefaults() {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "rgba(17,17,25,0.95)",
+          titleFont: { family: "'JetBrains Mono', monospace", size: 11 },
+          bodyFont: { family: "'JetBrains Mono', monospace", size: 11 },
+          borderColor: "rgba(212,165,116,0.2)",
+          borderWidth: 1,
+          padding: 10
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: chartColors.gridLabel, font: { family: "'JetBrains Mono'", size: 10 } },
+          grid: { color: chartColors.grid }
+        },
+        y: {
+          ticks: { color: chartColors.gridLabel, font: { family: "'JetBrains Mono'", size: 10 } },
+          grid: { color: chartColors.grid }
+        }
+      }
+    };
+  }
+
+  function destroyChart(key) {
+    if (chartInstances[key]) {
+      chartInstances[key].destroy();
+      delete chartInstances[key];
+    }
+  }
+
+  function destroyAllCharts() {
+    Object.keys(chartInstances).forEach(function(k) {
+      chartInstances[k].destroy();
+    });
+    chartInstances = {};
+  }
+
+  /* ── Load data ────────────────────────────────────────────────────── */
+  function load() {
+    setProgress(10, "Connecting...");
+    apiFetch("/.netlify/functions/history").then(function(r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      setProgress(50, "Parsing...");
+      return r.json();
+    }).then(function(d) {
+      DATA = d;
+      setProgress(80, "Rendering...");
+      buildSidebar();
+      // Auto-select first world or current world
+      var worlds = DATA.worlds || [];
+      if (worlds.length > 0) {
+        var current = worlds.find(function(w) { return w.status === "running" || w.status === "active"; });
+        selectWorld((current || worlds[worlds.length - 1]).world_id);
+      }
+      setProgress(100, "Complete");
+      setTimeout(function() { $("loadingOverlay").classList.add("hidden"); }, 400);
+    }).catch(function(e) {
+      setProgress(100, "Error: " + e.message);
+      console.error(e);
+      setTimeout(load, 5000);
+    });
+  }
+
+  /* ── Sidebar ──────────────────────────────────────────────────────── */
+  function buildSidebar() {
+    var container = $("sidebarList");
+    while (container.firstChild) container.removeChild(container.firstChild);
+
+    var worlds = DATA.worlds || [];
+    worlds.forEach(function(w) {
+      var item = el("div", "sb-item");
+      item.setAttribute("data-wid", w.world_id);
+
+      var line1 = el("span");
+      var numSpan = el("span", "sb-world-num");
+      numSpan.textContent = "World " + w.world_id;
+      line1.appendChild(numSpan);
+
+      var statusCls = "sb-status";
+      var st = (w.status || "unknown").toLowerCase();
+      if (st === "archived") statusCls += " archived";
+      else if (st === "running" || st === "active") statusCls += " active";
+      var badge = el("span", statusCls);
+      badge.textContent = st;
+      line1.appendChild(badge);
+      item.appendChild(line1);
+
+      var tickLine = el("span", "sb-ticks");
+      tickLine.textContent = num(w.total_ticks) + " ticks";
+      item.appendChild(tickLine);
+
+      item.addEventListener("click", function() { selectWorld(w.world_id); });
+      container.appendChild(item);
+    });
+  }
+
+  function selectWorld(wid) {
+    selectedWorldId = wid;
+
+    // Update sidebar active state
+    var items = document.querySelectorAll(".sb-item");
+    for (var i = 0; i < items.length; i++) {
+      if (parseInt(items[i].getAttribute("data-wid")) === wid) {
+        items[i].classList.add("active");
+      } else {
+        items[i].classList.remove("active");
+      }
+    }
+
+    // Close mobile sidebar
+    $("sidebar").classList.remove("open");
+
+    renderWorld(wid);
+  }
+
+  /* ── Render world detail ──────────────────────────────────────────── */
+  function renderWorld(wid) {
+    destroyAllCharts();
+    var main = $("mainPanel");
+    while (main.firstChild) main.removeChild(main.firstChild);
+
+    var world = null;
+    var worlds = DATA.worlds || [];
+    for (var i = 0; i < worlds.length; i++) {
+      if (worlds[i].world_id === wid) { world = worlds[i]; break; }
+    }
+    if (!world) {
+      var err = el("div", "empty-state");
+      err.textContent = "World " + wid + " not found.";
+      main.appendChild(err);
+      return;
+    }
+
+    $("footer").style.display = "";
+
+    var report = world.report || {};
+
+    // 1. Header
+    renderHeader(main, world);
+
+    // 2. Stats row
+    renderStats(main, world, report);
+
+    // 3. Milestones
+    renderMilestones(main, world);
+
+    // 4. Interaction timeline
+    renderInteractionTimeline(main, report);
+
+    // 5. Language analysis
+    renderLanguageAnalysis(main, report, world);
+
+    // 6. Social analysis
+    renderSocialAnalysis(main, report);
+
+    // 7. Training insights
+    renderTrainingInsights(main, wid);
+
+    // 8. Recommendations
+    renderRecommendations(main, report);
+
+    // 9. Evolution report
+    renderEvolutionReport(main, wid);
+
+    // 10. Cross-world comparison
+    renderCrossWorldComparison(main);
+
+    main.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
+
+  /* ── 1. Header ────────────────────────────────────────────────────── */
+  function renderHeader(parent, world) {
+    var hdr = el("div", "world-header");
+
+    var titleRow = el("div", "world-header-title");
+    titleRow.textContent = "World " + world.world_id;
+
+    var st = (world.status || "unknown").toLowerCase();
+    var badge = el("span", "status-badge " + (st === "archived" ? "archived" : (st === "running" || st === "active" ? "active" : "")));
+    badge.textContent = st;
+    titleRow.appendChild(badge);
+    hdr.appendChild(titleRow);
+
+    var sub = el("div", "world-header-sub");
+    sub.textContent = fmtDate(world.started_at) + " -- " + fmtDate(world.ended_at);
+    hdr.appendChild(sub);
+
+    parent.appendChild(hdr);
+  }
+
+  /* ── 2. Stats ─────────────────────────────────────────────────────── */
+  function renderStats(parent, world, report) {
+    var sec = el("div", "section");
+    var row = el("div", "metrics-row");
+
+    var stats = [
+      { label: "Ticks", val: num(world.total_ticks) },
+      { label: "Interactions", val: num(world.total_interactions) },
+      { label: "Shared Words", val: num(world.shared_words) },
+      { label: "Milestones", val: num(world.milestones_achieved) },
+      { label: "Citizens", val: num(world.citizen_count) },
+      { label: "English Leak", val: pct(report.english_leak_rate), cls: report.english_leak_rate > 0.3 ? "red" : (report.english_leak_rate > 0.1 ? "amber" : "green") }
+    ];
+
+    stats.forEach(function(s) {
+      var card = el("div", "metric-card");
+      var lbl = el("div", "metric-label");
+      lbl.textContent = s.label;
+      card.appendChild(lbl);
+
+      var v = el("div", "metric-val" + (s.cls ? " " + s.cls : ""));
+      v.textContent = s.val;
+      card.appendChild(v);
+      row.appendChild(card);
+    });
+
+    sec.appendChild(row);
+    parent.appendChild(sec);
+  }
+
+  /* ── 3. Milestones ────────────────────────────────────────────────── */
+  function renderMilestones(parent, world) {
+    var list = world.milestone_list || [];
+    if (list.length === 0) return;
+
+    var sec = el("div", "section");
+    var hdr = el("div", "section-hdr");
+    var snum = el("span", "section-num"); snum.textContent = "01";
+    var stitle = el("span", "section-title"); stitle.textContent = "Milestones";
+    hdr.appendChild(snum); hdr.appendChild(stitle);
+    sec.appendChild(hdr);
+    sec.appendChild(el("hr", "section-divider"));
+
+    var pillRow = el("div", "pill-row");
+    list.forEach(function(m) {
+      var p = el("span", "pill");
+      p.textContent = typeof m === "string" ? m : (m.name || m.milestone || JSON.stringify(m));
+      pillRow.appendChild(p);
+    });
+    sec.appendChild(pillRow);
+    parent.appendChild(sec);
+  }
+
+  /* ── 4. Interaction timeline ──────────────────────────────────────── */
+  function renderInteractionTimeline(parent, report) {
+    var timeline = report.interaction_timeline || [];
+    if (timeline.length === 0) return;
+
+    var sec = el("div", "section");
+    var hdr = el("div", "section-hdr");
+    var snum = el("span", "section-num"); snum.textContent = "02";
+    var stitle = el("span", "section-title"); stitle.textContent = "Interaction Timeline";
+    hdr.appendChild(snum); hdr.appendChild(stitle);
+    sec.appendChild(hdr);
+    sec.appendChild(el("hr", "section-divider"));
+
+    var wrap = el("div", "chart-wrap");
+    var ctitle = el("div", "chart-title"); ctitle.textContent = "Interactions per tick range";
+    wrap.appendChild(ctitle);
+    var container = el("div", "chart-container");
+    container.style.height = "260px";
+    var canvas = document.createElement("canvas");
+    canvas.id = "chartInteractionTimeline";
+    container.appendChild(canvas);
+    wrap.appendChild(container);
+    sec.appendChild(wrap);
+    parent.appendChild(sec);
+
+    var labels = timeline.map(function(t) { return t.tick_range || ""; });
+    var counts = timeline.map(function(t) { return t.count || 0; });
+
+    destroyChart("interactionTimeline");
+    chartInstances["interactionTimeline"] = new Chart(canvas, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Interactions",
+          data: counts,
+          backgroundColor: chartColors.amberBg,
+          borderColor: chartColors.amber,
+          borderWidth: 1
+        }]
+      },
+      options: chartDefaults()
+    });
+  }
+
+  /* ── 5. Language analysis ─────────────────────────────────────────── */
+  function renderLanguageAnalysis(parent, report, world) {
+    var lang = report.language_analysis || {};
+    var sharedVocab = lang.shared_vocabulary || [];
+    var perCitizen = lang.per_citizen_vocab_size || {};
+
+    // Also check for the world_report.py format
+    if (sharedVocab.length === 0 && Array.isArray(lang.most_used_sounds)) {
+      sharedVocab = lang.most_used_sounds;
+    }
+
+    var hasData = sharedVocab.length > 0 || Object.keys(perCitizen).length > 0;
+    if (!hasData) return;
+
+    var sec = el("div", "section");
+    var hdr = el("div", "section-hdr");
+    var snum = el("span", "section-num"); snum.textContent = "03";
+    var stitle = el("span", "section-title"); stitle.textContent = "Language Analysis";
+    hdr.appendChild(snum); hdr.appendChild(stitle);
+    sec.appendChild(hdr);
+    sec.appendChild(el("hr", "section-divider"));
+
+    // Shared vocabulary table
+    if (sharedVocab.length > 0) {
+      var wrap = el("div", "tbl-scroll");
+      var table = document.createElement("table");
+      var thead = document.createElement("thead");
+      var headRow = document.createElement("tr");
+      ["Sound", "Meaning", "Users"].forEach(function(h) {
+        var th = document.createElement("th");
+        th.textContent = h;
+        headRow.appendChild(th);
+      });
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      var tbody = document.createElement("tbody");
+      sharedVocab.forEach(function(w) {
+        var tr = document.createElement("tr");
+        var tdSound = document.createElement("td");
+        tdSound.textContent = safe(w.sound || w.word || w);
+        tr.appendChild(tdSound);
+
+        var tdMeaning = document.createElement("td");
+        tdMeaning.textContent = safe(w.meaning || w.context || "");
+        tr.appendChild(tdMeaning);
+
+        var tdUsers = document.createElement("td");
+        tdUsers.textContent = safe(w.citizens_knowing || w.users || w.count || "");
+        tr.appendChild(tdUsers);
+
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      wrap.appendChild(table);
+      sec.appendChild(wrap);
+    }
+
+    // Per-citizen vocab sizes chart
+    var citizenKeys = Object.keys(perCitizen);
+    if (citizenKeys.length > 0) {
+      var chartWrap = el("div", "chart-wrap");
+      chartWrap.style.marginTop = "16px";
+      var ctitle = el("div", "chart-title"); ctitle.textContent = "Vocabulary size per citizen";
+      chartWrap.appendChild(ctitle);
+      var container = el("div", "chart-container");
+      container.style.height = Math.max(180, citizenKeys.length * 28) + "px";
+      var canvas = document.createElement("canvas");
+      canvas.id = "chartCitizenVocab";
+      container.appendChild(canvas);
+      chartWrap.appendChild(container);
+      sec.appendChild(chartWrap);
+      parent.appendChild(sec);
+
+      var sortedCitizens = citizenKeys.sort(function(a, b) { return (perCitizen[b] || 0) - (perCitizen[a] || 0); });
+      var vocabLabels = sortedCitizens.map(function(k) {
+        return k.length > 14 ? k.substring(0, 12) + ".." : k;
+      });
+      var vocabVals = sortedCitizens.map(function(k) { return perCitizen[k] || 0; });
+
+      destroyChart("citizenVocab");
+      var opts = chartDefaults();
+      opts.indexAxis = "y";
+      chartInstances["citizenVocab"] = new Chart(canvas, {
+        type: "bar",
+        data: {
+          labels: vocabLabels,
+          datasets: [{
+            label: "Vocab size",
+            data: vocabVals,
+            backgroundColor: chartColors.blueBg,
+            borderColor: chartColors.blue,
+            borderWidth: 1
+          }]
+        },
+        options: opts
+      });
+    } else {
+      parent.appendChild(sec);
+    }
+  }
+
+  /* ── 6. Social analysis ───────────────────────────────────────────── */
+  function renderSocialAnalysis(parent, report) {
+    var social = report.social_analysis || report.social_network || {};
+    var bonds = social.strongest_bonds || [];
+    var rivalries = social.rivalries || [];
+    var mip = social.most_interactive_pair;
+
+    if (bonds.length === 0 && rivalries.length === 0 && !mip) return;
+
+    var sec = el("div", "section");
+    var hdr = el("div", "section-hdr");
+    var snum = el("span", "section-num"); snum.textContent = "04";
+    var stitle = el("span", "section-title"); stitle.textContent = "Social Analysis";
+    hdr.appendChild(snum); hdr.appendChild(stitle);
+    sec.appendChild(hdr);
+    sec.appendChild(el("hr", "section-divider"));
+
+    // Most interactive pair
+    if (mip) {
+      var pairCard = el("div", "metric-card");
+      pairCard.style.marginBottom = "16px";
+      var pairLabel = el("div", "metric-label"); pairLabel.textContent = "Most Interactive Pair";
+      pairCard.appendChild(pairLabel);
+      var pairVal = el("div", "metric-val");
+      pairVal.style.fontSize = "1rem";
+      pairVal.textContent = safe(mip.a, "?") + " + " + safe(mip.b, "?") + " (" + num(mip.count) + ")";
+      pairCard.appendChild(pairVal);
+      sec.appendChild(pairCard);
+    }
+
+    // Bonds table
+    if (bonds.length > 0) {
+      var bLabel = el("div", "chart-title"); bLabel.textContent = "Strongest Bonds"; bLabel.style.marginTop = "12px";
+      sec.appendChild(bLabel);
+      var bWrap = el("div", "tbl-scroll");
+      bWrap.style.maxHeight = "250px";
+      var bTable = document.createElement("table");
+      var bHead = document.createElement("thead");
+      var bHr = document.createElement("tr");
+      ["Citizen A", "Citizen B", "Score", "Type"].forEach(function(h) {
+        var th = document.createElement("th"); th.textContent = h; bHr.appendChild(th);
+      });
+      bHead.appendChild(bHr);
+      bTable.appendChild(bHead);
+
+      var bBody = document.createElement("tbody");
+      bonds.forEach(function(b) {
+        var tr = document.createElement("tr");
+        var cols = [
+          safe(b.a || b.citizen_a || b.citizen || ""),
+          safe(b.b || b.citizen_b || b.partner || ""),
+          b.score != null ? (typeof b.score === "number" ? b.score.toFixed(2) : b.score) : safe(b.strength, ""),
+          safe(b.type || "")
+        ];
+        cols.forEach(function(v) {
+          var td = document.createElement("td"); td.textContent = v; tr.appendChild(td);
+        });
+        bBody.appendChild(tr);
+      });
+      bTable.appendChild(bBody);
+      bWrap.appendChild(bTable);
+      sec.appendChild(bWrap);
+    }
+
+    // Rivalries table
+    if (rivalries.length > 0) {
+      var rLabel = el("div", "chart-title"); rLabel.textContent = "Rivalries"; rLabel.style.marginTop = "16px";
+      sec.appendChild(rLabel);
+      var rWrap = el("div", "tbl-scroll");
+      rWrap.style.maxHeight = "200px";
+      var rTable = document.createElement("table");
+      var rHead = document.createElement("thead");
+      var rHr = document.createElement("tr");
+      ["Citizen A", "Citizen B", "Score", "Type"].forEach(function(h) {
+        var th = document.createElement("th"); th.textContent = h; rHr.appendChild(th);
+      });
+      rHead.appendChild(rHr);
+      rTable.appendChild(rHead);
+
+      var rBody = document.createElement("tbody");
+      rivalries.forEach(function(rv) {
+        var tr = document.createElement("tr");
+        var cols = [
+          safe(rv.a || rv.citizen_a || ""),
+          safe(rv.b || rv.citizen_b || ""),
+          rv.score != null ? (typeof rv.score === "number" ? rv.score.toFixed(2) : rv.score) : "",
+          safe(rv.type || "")
+        ];
+        cols.forEach(function(v) {
+          var td = document.createElement("td"); td.textContent = v; tr.appendChild(td);
+        });
+        rBody.appendChild(tr);
+      });
+      rTable.appendChild(rBody);
+      rWrap.appendChild(rTable);
+      sec.appendChild(rWrap);
+    }
+
+    parent.appendChild(sec);
+  }
+
+  /* ── 7. Training insights ─────────────────────────────────────────── */
+  function renderTrainingInsights(parent, wid) {
+    var insights = (DATA.insights_by_world || {})[wid] || [];
+    if (insights.length === 0) return;
+
+    var sec = el("div", "section");
+    var hdr = el("div", "section-hdr");
+    var snum = el("span", "section-num"); snum.textContent = "05";
+    var stitle = el("span", "section-title"); stitle.textContent = "Training Insights";
+    hdr.appendChild(snum); hdr.appendChild(stitle);
+    sec.appendChild(hdr);
+    sec.appendChild(el("hr", "section-divider"));
+
+    insights.forEach(function(ins) {
+      var card = el("div", "insight-card");
+      var typeBadge = el("span", "insight-type " + (ins.type || "").toLowerCase());
+      typeBadge.textContent = safe(ins.type, "insight");
+      card.appendChild(typeBadge);
+
+      var desc = el("div", "insight-desc");
+      desc.textContent = safe(ins.description, "");
+      card.appendChild(desc);
+
+      sec.appendChild(card);
+    });
+
+    parent.appendChild(sec);
+  }
+
+  /* ── 8. Recommendations ───────────────────────────────────────────── */
+  function renderRecommendations(parent, report) {
+    var recs = report.recommendations || [];
+    if (recs.length === 0) return;
+
+    var sec = el("div", "section");
+    var hdr = el("div", "section-hdr");
+    var snum = el("span", "section-num"); snum.textContent = "06";
+    var stitle = el("span", "section-title"); stitle.textContent = "Recommendations";
+    hdr.appendChild(snum); hdr.appendChild(stitle);
+    sec.appendChild(hdr);
+    sec.appendChild(el("hr", "section-divider"));
+
+    recs.forEach(function(rec) {
+      var card = el("div", "rec-card");
+      var prio = (rec.priority || "medium").toLowerCase();
+      var prioBadge = el("span", "rec-priority " + prio);
+      prioBadge.textContent = prio;
+      card.appendChild(prioBadge);
+
+      if (rec.type) {
+        var typeBadge = el("span", "insight-type " + rec.type.toLowerCase());
+        typeBadge.textContent = rec.type;
+        typeBadge.style.marginLeft = "6px";
+        card.appendChild(typeBadge);
+      }
+
+      var desc = el("div", "rec-desc");
+      desc.textContent = safe(rec.description, "");
+      card.appendChild(desc);
+
+      if (rec.action) {
+        var action = el("div", "rec-action");
+        action.textContent = "Action: " + rec.action;
+        card.appendChild(action);
+      }
+
+      sec.appendChild(card);
+    });
+
+    parent.appendChild(sec);
+  }
+
+  /* ── 9. Evolution report ──────────────────────────────────────────── */
+  function renderEvolutionReport(parent, wid) {
+    var evoReports = DATA.evolution_reports || [];
+    var evoReport = null;
+    for (var i = 0; i < evoReports.length; i++) {
+      if (evoReports[i].world_id === wid) { evoReport = evoReports[i].report; break; }
+    }
+    if (!evoReport) return;
+
+    var examplesAdded = evoReport.examples_added || {};
+    var archetypes = Object.keys(examplesAdded);
+    if (archetypes.length === 0) return;
+
+    var sec = el("div", "section");
+    var hdr = el("div", "section-hdr");
+    var snum = el("span", "section-num"); snum.textContent = "07";
+    var stitle = el("span", "section-title"); stitle.textContent = "Evolution Report";
+    hdr.appendChild(snum); hdr.appendChild(stitle);
+    sec.appendChild(hdr);
+    sec.appendChild(el("hr", "section-divider"));
+
+    // Summary metrics
+    var totalAdded = 0;
+    archetypes.forEach(function(k) { totalAdded += (examplesAdded[k] || 0); });
+
+    var summaryRow = el("div", "metrics-row");
+    var items = [
+      { label: "Archetypes Updated", val: String(archetypes.length) },
+      { label: "Total Examples Added", val: num(totalAdded) },
+      { label: "Survivors", val: num(evoReport.survivors) },
+      { label: "Dead", val: num(evoReport.dead) }
+    ];
+    items.forEach(function(s) {
+      var card = el("div", "metric-card");
+      var lbl = el("div", "metric-label"); lbl.textContent = s.label; card.appendChild(lbl);
+      var v = el("div", "metric-val"); v.textContent = s.val; card.appendChild(v);
+      summaryRow.appendChild(card);
+    });
+    sec.appendChild(summaryRow);
+
+    // Chart: examples added per archetype
+    var wrap = el("div", "chart-wrap");
+    var ctitle = el("div", "chart-title"); ctitle.textContent = "Training examples added per archetype";
+    wrap.appendChild(ctitle);
+    var container = el("div", "chart-container");
+    container.style.height = Math.max(200, archetypes.length * 32) + "px";
+    var canvas = document.createElement("canvas");
+    canvas.id = "chartEvoExamples";
+    container.appendChild(canvas);
+    wrap.appendChild(container);
+    sec.appendChild(wrap);
+    parent.appendChild(sec);
+
+    var sortedArch = archetypes.sort(function(a, b) { return (examplesAdded[b] || 0) - (examplesAdded[a] || 0); });
+    var archLabels = sortedArch.map(function(k) { return k.length > 16 ? k.substring(0, 14) + ".." : k; });
+    var archVals = sortedArch.map(function(k) { return examplesAdded[k] || 0; });
+
+    destroyChart("evoExamples");
+    var opts = chartDefaults();
+    opts.indexAxis = "y";
+    chartInstances["evoExamples"] = new Chart(canvas, {
+      type: "bar",
+      data: {
+        labels: archLabels,
+        datasets: [{
+          label: "Examples added",
+          data: archVals,
+          backgroundColor: chartColors.greenBg,
+          borderColor: chartColors.green,
+          borderWidth: 1
+        }]
+      },
+      options: opts
+    });
+  }
+
+  /* ── 10. Cross-world comparison ───────────────────────────────────── */
+  function renderCrossWorldComparison(parent) {
+    var worlds = DATA.worlds || [];
+    if (worlds.length < 2) return;
+
+    var sec = el("div", "section");
+    var hdr = el("div", "section-hdr");
+    var snum = el("span", "section-num"); snum.textContent = "08";
+    var stitle = el("span", "section-title"); stitle.textContent = "Cross-World Comparison";
+    hdr.appendChild(snum); hdr.appendChild(stitle);
+    sec.appendChild(hdr);
+    sec.appendChild(el("hr", "section-divider"));
+
+    // Summary stats from cross_world_analysis
+    var cwa = DATA.cross_world_analysis || {};
+    var summaryRow = el("div", "metrics-row");
+    var items = [
+      { label: "Total Worlds", val: num(cwa.total_worlds) },
+      { label: "Total Ticks", val: num(cwa.total_ticks_all_worlds) },
+      { label: "Total Interactions", val: num(cwa.total_interactions_all_worlds) },
+      { label: "Avg Lifespan", val: num(cwa.avg_world_lifespan_ticks) + " ticks" }
+    ];
+    items.forEach(function(s) {
+      var card = el("div", "metric-card");
+      var lbl = el("div", "metric-label"); lbl.textContent = s.label; card.appendChild(lbl);
+      var v = el("div", "metric-val blue"); v.textContent = s.val; card.appendChild(v);
+      summaryRow.appendChild(card);
+    });
+    sec.appendChild(summaryRow);
+
+    // Bar chart comparing all worlds
+    var chartGrid = el("div", "chart-grid");
+
+    // Ticks comparison
+    var tickWrap = el("div", "chart-wrap");
+    var tickTitle = el("div", "chart-title"); tickTitle.textContent = "Ticks per world";
+    tickWrap.appendChild(tickTitle);
+    var tickContainer = el("div", "chart-container");
+    tickContainer.style.height = "240px";
+    var tickCanvas = document.createElement("canvas");
+    tickCanvas.id = "chartCrossWorldTicks";
+    tickContainer.appendChild(tickCanvas);
+    tickWrap.appendChild(tickContainer);
+    chartGrid.appendChild(tickWrap);
+
+    // Interactions comparison
+    var intWrap = el("div", "chart-wrap");
+    var intTitle = el("div", "chart-title"); intTitle.textContent = "Interactions per world";
+    intWrap.appendChild(intTitle);
+    var intContainer = el("div", "chart-container");
+    intContainer.style.height = "240px";
+    var intCanvas = document.createElement("canvas");
+    intCanvas.id = "chartCrossWorldInteractions";
+    intContainer.appendChild(intCanvas);
+    intWrap.appendChild(intContainer);
+    chartGrid.appendChild(intWrap);
+
+    sec.appendChild(chartGrid);
+
+    // Shared words comparison
+    var vocWrap = el("div", "chart-wrap");
+    var vocTitle = el("div", "chart-title"); vocTitle.textContent = "Shared vocabulary per world";
+    vocWrap.appendChild(vocTitle);
+    var vocContainer = el("div", "chart-container");
+    vocContainer.style.height = "240px";
+    var vocCanvas = document.createElement("canvas");
+    vocCanvas.id = "chartCrossWorldVocab";
+    vocContainer.appendChild(vocCanvas);
+    vocWrap.appendChild(vocContainer);
+    sec.appendChild(vocWrap);
+
+    // English leak trend
+    var leakTrend = cwa.english_leak_trend || [];
+    if (leakTrend.length > 1) {
+      var leakWrap = el("div", "chart-wrap");
+      var leakTitle = el("div", "chart-title"); leakTitle.textContent = "English leak rate across worlds";
+      leakWrap.appendChild(leakTitle);
+      var leakContainer = el("div", "chart-container");
+      leakContainer.style.height = "200px";
+      var leakCanvas = document.createElement("canvas");
+      leakCanvas.id = "chartLeakTrend";
+      leakContainer.appendChild(leakCanvas);
+      leakWrap.appendChild(leakContainer);
+      sec.appendChild(leakWrap);
+    }
+
+    parent.appendChild(sec);
+
+    // Render the charts
+    var wLabels = worlds.map(function(w) { return "W" + w.world_id; });
+
+    destroyChart("crossTicks");
+    chartInstances["crossTicks"] = new Chart(tickCanvas, {
+      type: "bar",
+      data: {
+        labels: wLabels,
+        datasets: [{
+          label: "Ticks",
+          data: worlds.map(function(w) { return w.total_ticks || 0; }),
+          backgroundColor: worlds.map(function(w) {
+            return w.world_id === selectedWorldId ? chartColors.amber : chartColors.amberBg;
+          }),
+          borderColor: chartColors.amber,
+          borderWidth: 1
+        }]
+      },
+      options: chartDefaults()
+    });
+
+    destroyChart("crossInteractions");
+    chartInstances["crossInteractions"] = new Chart(intCanvas, {
+      type: "bar",
+      data: {
+        labels: wLabels,
+        datasets: [{
+          label: "Interactions",
+          data: worlds.map(function(w) { return w.total_interactions || 0; }),
+          backgroundColor: worlds.map(function(w) {
+            return w.world_id === selectedWorldId ? chartColors.green : chartColors.greenBg;
+          }),
+          borderColor: chartColors.green,
+          borderWidth: 1
+        }]
+      },
+      options: chartDefaults()
+    });
+
+    destroyChart("crossVocab");
+    chartInstances["crossVocab"] = new Chart(vocCanvas, {
+      type: "bar",
+      data: {
+        labels: wLabels,
+        datasets: [{
+          label: "Shared words",
+          data: worlds.map(function(w) { return w.shared_words || 0; }),
+          backgroundColor: worlds.map(function(w) {
+            return w.world_id === selectedWorldId ? chartColors.blue : chartColors.blueBg;
+          }),
+          borderColor: chartColors.blue,
+          borderWidth: 1
+        }]
+      },
+      options: chartDefaults()
+    });
+
+    if (leakTrend.length > 1) {
+      var leakLabels = leakTrend.map(function(e) { return "W" + e.world_id; });
+      var leakData = leakTrend.map(function(e) { return e.rate != null ? (e.rate * 100) : null; });
+
+      destroyChart("leakTrend");
+      var leakOpts = chartDefaults();
+      leakOpts.scales.y.title = { display: true, text: "%", color: chartColors.gridLabel, font: { family: "'JetBrains Mono'", size: 10 } };
+      chartInstances["leakTrend"] = new Chart(document.getElementById("chartLeakTrend"), {
+        type: "line",
+        data: {
+          labels: leakLabels,
+          datasets: [{
+            label: "English leak %",
+            data: leakData,
+            borderColor: chartColors.red,
+            backgroundColor: chartColors.redBg,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointBackgroundColor: chartColors.red
+          }]
+        },
+        options: leakOpts
+      });
+    }
+  }
+
+  /* ── Mobile toggle ────────────────────────────────────────────────── */
+  $("mobileToggle").addEventListener("click", function() {
+    $("sidebar").classList.toggle("open");
+  });
+
+  /* ── Boot ──────────────────────────────────────────────────────────── */
+  load();
+
+})();
+</script>
+</body>
+</html>

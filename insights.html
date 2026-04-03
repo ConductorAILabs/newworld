@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WildMind — Research Insights</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23d4a574'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,300;1,8..60,400;1,8..60,600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--bg:#0a0a0f;--bg2:#0e0e15;--bg3:#14141d;--card:#111119;--text:#ddd5c4;--dim:#706a5e;--muted:#3a3640;--amber:#d4a574;--green:#4a9e6e;--blue:#5a9bba;--red:#c44a20;--mono:'JetBrains Mono',monospace;--serif:'Source Serif 4',Georgia,serif;--sidebar-w:220px}
+    html{font-size:15px;scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+    body{font-family:var(--serif);background:var(--bg);color:var(--text);line-height:1.65;overflow-x:hidden}
+    body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.4}
+    ::selection{background:rgba(212,165,116,0.25);color:#fff}
+    a{color:var(--amber);text-decoration:none}a:hover{text-decoration:underline}
+
+    /* NAV */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 40px;background:rgba(10,10,15,0.85);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.04)}
+    .nav-logo{font-family:var(--mono);font-size:.85rem;font-weight:700;letter-spacing:3px;text-decoration:none}
+    .nav-logo .w{color:var(--amber)}.nav-logo .m{color:var(--dim)}
+    .nav-links{display:flex;gap:28px}
+    .nav-links a{color:var(--dim);text-decoration:none;font-size:.78rem;font-weight:500;font-family:var(--mono);transition:color .3s;letter-spacing:.5px}
+    .nav-links a:hover{color:var(--text)}.nav-links a.active{color:var(--text)}.nav-links .support{color:var(--amber);opacity:.7}.nav-links .support:hover{opacity:1}
+
+    /* LAYOUT */
+    .page-wrap{display:flex;margin-top:52px;min-height:calc(100vh - 52px)}
+    .sidebar{position:fixed;top:52px;left:0;bottom:0;width:var(--sidebar-w);background:var(--bg2);border-right:1px solid rgba(255,255,255,0.04);overflow-y:auto;padding:20px 0;z-index:50;scrollbar-width:thin;scrollbar-color:var(--muted) transparent}
+    .sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-thumb{background:var(--muted);border-radius:2px}
+    .sidebar .sb-label{font-family:var(--mono);font-size:.55rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:16px 20px 6px;display:block}
+    .sidebar a{display:block;padding:6px 20px;font-family:var(--mono);font-size:.7rem;color:var(--dim);text-decoration:none;transition:all .15s;border-left:2px solid transparent;line-height:1.6}
+    .sidebar a:hover{color:var(--text);background:rgba(255,255,255,0.02)}
+    .sidebar a.active{color:var(--amber);border-left-color:var(--amber);background:rgba(212,165,116,0.04)}
+    .main{margin-left:var(--sidebar-w);flex:1;padding:32px 40px 80px;max-width:1200px}
+
+    /* LOADING */
+    .loading-overlay{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .5s}
+    .loading-overlay.hidden{opacity:0;pointer-events:none}
+    .loading-bar{width:300px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:16px}
+    .loading-bar-fill{height:100%;background:var(--amber);border-radius:2px;width:0;transition:width .3s}
+    .loading-text{font-family:var(--mono);font-size:.75rem;color:var(--dim);margin-top:10px;letter-spacing:1px}
+
+    /* SECTIONS */
+    .section{margin-bottom:80px;scroll-margin-top:72px}
+    .section-hdr{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+    .section-num{font-family:var(--mono);font-size:.65rem;font-weight:700;color:var(--amber);opacity:.5;letter-spacing:1px}
+    .section-title{font-family:var(--serif);font-weight:600;font-size:1.35rem;color:var(--text)}
+    .section-desc{font-size:.88rem;color:var(--dim);margin-bottom:20px;max-width:700px;line-height:1.7}
+    .section-divider{border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0 0 20px}
+
+    /* METRIC CARDS */
+    .metrics-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:20px}
+    .metric-card{background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:16px 18px;transition:border-color .2s;position:relative;overflow:hidden}
+    .metric-card:hover{border-color:rgba(212,165,116,0.12)}
+    .metric-label{font-family:var(--mono);font-size:.6rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+    .metric-val{font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--amber)}
+    .metric-sub{font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-top:2px}
+    .metric-val.green{color:var(--green)}.metric-val.blue{color:var(--blue)}.metric-val.red{color:var(--red)}
+    .metric-spark{width:100%;height:40px;margin-top:8px}
+    .stage-badge{display:inline-block;font-family:var(--mono);font-size:.7rem;font-weight:700;padding:4px 14px;border-radius:3px;letter-spacing:1px;text-transform:uppercase;background:rgba(212,165,116,0.1);color:var(--amber);border:1px solid rgba(212,165,116,0.2)}
+
+    /* CHART CONTAINERS */
+    .chart-wrap{background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:20px;margin-bottom:16px;position:relative}
+    .chart-wrap:hover{border-color:rgba(255,255,255,0.06)}
+    .chart-title{font-family:var(--mono);font-size:.65rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+    .chart-container{position:relative;width:100%}
+    .chart-stat{display:inline-block;font-family:var(--mono);font-size:.75rem;padding:3px 10px;border-radius:3px;margin:0 6px 8px 0}
+    .chart-stat.amber{background:rgba(212,165,116,0.1);color:var(--amber)}
+    .chart-stat.green{background:rgba(74,158,110,0.1);color:var(--green)}
+    .chart-stat.blue{background:rgba(90,155,186,0.1);color:var(--blue)}
+    .chart-stat.red{background:rgba(196,74,32,0.1);color:var(--red)}
+    .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+    /* TABLES */
+    table{width:100%;border-collapse:collapse;font-size:.78rem;font-family:var(--mono)}
+    thead th{position:sticky;top:0;background:var(--bg2);color:var(--dim);font-weight:600;text-align:left;padding:8px 10px;font-size:.65rem;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;user-select:none;white-space:nowrap}
+    thead th:hover{color:var(--text)}
+    thead th .sa{opacity:.3;margin-left:4px;font-size:.55rem}
+    thead th.sorted .sa{opacity:1;color:var(--amber)}
+    tbody td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.02);color:var(--text);white-space:nowrap}
+    tbody tr:nth-child(even){background:rgba(255,255,255,0.01)}
+    tbody tr:hover{background:rgba(212,165,116,0.03)}
+    .tbl-scroll{max-height:400px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--muted) transparent}
+    .tbl-scroll::-webkit-scrollbar{width:4px}.tbl-scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:2px}
+
+    /* FILTER & BUTTONS */
+    .filter-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+    .filter-input{font-family:var(--mono);font-size:.75rem;padding:7px 12px;background:var(--bg3);border:1px solid rgba(255,255,255,0.06);border-radius:4px;color:var(--text);outline:none;transition:border-color .2s;min-width:200px}
+    .filter-input:focus{border-color:var(--amber)}.filter-input::placeholder{color:var(--muted)}
+    .btn{font-family:var(--mono);font-size:.7rem;font-weight:600;letter-spacing:1px;padding:7px 16px;border:1px solid rgba(212,165,116,0.3);background:rgba(212,165,116,0.06);color:var(--amber);border-radius:4px;cursor:pointer;transition:all .2s;text-transform:uppercase}
+    .btn:hover{background:rgba(212,165,116,0.15);border-color:rgba(212,165,116,0.5)}
+    .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+
+    /* CASCADE CARDS */
+    .cascade-card{background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:18px;margin-bottom:10px;border-left:3px solid var(--amber);transition:border-color .2s}
+    .cascade-card:hover{border-color:rgba(212,165,116,0.2)}
+    .cascade-sound{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--amber)}
+    .cascade-meaning{font-family:var(--mono);font-size:.7rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-left:8px}
+    .cascade-meta{font-family:var(--mono);font-size:.68rem;color:var(--dim);margin-top:6px}
+    .cascade-adopters{font-family:var(--mono);font-size:.68rem;color:var(--green);margin-top:4px}
+
+    /* CITIZEN EXPAND */
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+    .citizen-expand{background:var(--bg2);border:1px solid rgba(255,255,255,0.04);border-radius:4px;padding:14px;margin:6px 0 12px;animation:fadeIn .2s}
+    .citizen-expand h5{font-family:var(--mono);font-size:.7rem;color:var(--amber);letter-spacing:1px;text-transform:uppercase;margin:10px 0 6px}
+    .citizen-expand .lt{display:inline-block;font-family:var(--mono);font-size:.68rem;background:rgba(212,165,116,0.06);border:1px solid rgba(212,165,116,0.1);border-radius:3px;padding:2px 8px;margin:2px;color:var(--text)}
+
+    /* METHOD BLOCKS */
+    .method-block{background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:24px;margin-bottom:16px}
+    .method-block h4{font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--amber);margin-bottom:8px;letter-spacing:.5px}
+    .method-block p{font-size:.88rem;color:var(--dim);line-height:1.8;margin-bottom:8px}
+    .method-block code{font-family:var(--mono);font-size:.78rem;color:var(--text);background:var(--bg3);padding:1px 6px;border-radius:3px}
+    .method-block pre{font-family:var(--mono);font-size:.72rem;color:var(--text);background:var(--bg);border:1px solid rgba(255,255,255,0.04);border-radius:4px;padding:14px;margin:8px 0;overflow-x:auto;line-height:1.6;white-space:pre-wrap;word-break:break-all}
+    .citation{font-family:var(--mono);font-size:.75rem;color:var(--dim);background:var(--bg);border-left:3px solid var(--amber);padding:12px 16px;margin:16px 0;line-height:1.6}
+
+    /* FOOTER */
+    .foot{padding:40px;text-align:center;border-top:1px solid rgba(255,255,255,0.04);margin-left:var(--sidebar-w)}
+    .foot-logo{font-family:var(--mono);font-size:.75rem;font-weight:700;letter-spacing:3px;margin-bottom:6px}
+    .foot-logo .w{color:var(--amber)}.foot-logo .m{color:var(--muted)}
+    .foot-text{font-size:.7rem;color:var(--muted);font-family:var(--mono)}.foot-text a{color:var(--amber);text-decoration:none;opacity:.6}.foot-text a:hover{opacity:1}
+
+    /* MOBILE */
+    .mobile-toggle{display:none;position:fixed;bottom:20px;right:20px;z-index:110;width:44px;height:44px;border-radius:50%;background:var(--amber);color:var(--bg);font-size:1.2rem;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.4);font-family:var(--mono);font-weight:700}
+    @media(max-width:900px){
+      .sidebar{transform:translateX(-100%);transition:transform .3s;width:260px}
+      .sidebar.open{transform:translateX(0)}
+      .main{margin-left:0;padding:24px 16px 80px}
+      .foot{margin-left:0}
+      .mobile-toggle{display:flex;align-items:center;justify-content:center}
+      .chart-grid{grid-template-columns:1fr}
+      .metrics-row{grid-template-columns:repeat(2,1fr)}
+      .nav{padding:12px 16px}.nav-links{gap:14px}.nav-links a{font-size:.7rem}
+    }
+    @media(max-width:500px){.metrics-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo"><span class="w">WILD</span><span class="m">MIND</span></a>
+  <div class="nav-links">
+    <a href="/">Dashboard</a>
+    <a href="/about.html">About</a>
+    <a href="/worlds.html">Worlds</a>
+    <a href="/insights.html" class="active">Research</a>
+    <a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener" class="support">Support</a>
+  </div>
+</nav>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div style="font-family:var(--mono);font-size:.85rem;color:var(--amber);letter-spacing:3px;font-weight:700">WILDMIND</div>
+  <div class="loading-bar"><div class="loading-bar-fill" id="loadingBar"></div></div>
+  <div class="loading-text" id="loadingText">Connecting to simulation...</div>
+</div>
+
+<button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation">&#9776;</button>
+
+<aside class="sidebar" id="sidebar">
+  <span class="sb-label">Analysis</span>
+  <a href="#overview" class="active" data-section="overview">Overview</a>
+  <a href="#zipf" data-section="zipf">Zipf's Law</a>
+  <a href="#heaps" data-section="heaps">Heaps' Law</a>
+  <a href="#network" data-section="network">Network Topology</a>
+  <a href="#growth" data-section="growth">Vocabulary Growth</a>
+  <a href="#influence" data-section="influence">Influence &amp; Cascades</a>
+  <span class="sb-label">Data</span>
+  <a href="#dictionary" data-section="dictionary">Language Dictionary</a>
+  <a href="#phonemes" data-section="phonemes">Phoneme Analysis</a>
+  <a href="#efficiency" data-section="efficiency">Comm. Efficiency</a>
+  <a href="#social" data-section="social">Social Network</a>
+  <span class="sb-label">History</span>
+  <a href="#survival" data-section="survival">Survival &amp; Population</a>
+  <a href="#worlds" data-section="worlds">World History</a>
+  <a href="#training" data-section="training">Training History</a>
+  <span class="sb-label">Reference</span>
+  <a href="#methodology" data-section="methodology">Methodology</a>
+  <a href="#api-docs" data-section="api-docs">API Documentation</a>
+  <a href="#export" data-section="export">Data Export</a>
+</aside>
+
+<div class="page-wrap">
+<main class="main" id="mainContent">
+
+<!-- ══════ 01 OVERVIEW ══════ -->
+<div class="section" id="overview">
+  <div class="section-hdr"><span class="section-num">01</span><h2 class="section-title">Overview Dashboard</h2></div>
+  <p class="section-desc">Key metrics from the WildMind simulation at a glance.</p><hr class="section-divider">
+  <div id="overviewStage" style="margin-bottom:16px"></div>
+  <div class="metrics-row" id="overviewMetrics"></div>
+</div>
+
+<!-- ══════ 02 ZIPF ══════ -->
+<div class="section" id="zipf">
+  <div class="section-hdr"><span class="section-num">02</span><h2 class="section-title">Zipf's Law Analysis</h2></div>
+  <p class="section-desc">The rank-frequency distribution of sounds in the emergent language. Natural languages follow Zipf's Law with slope near -1.0 on a log-log plot.</p><hr class="section-divider">
+  <div id="zipfStats"></div>
+  <div class="chart-wrap"><div class="chart-title">Log-Log Rank vs Frequency</div><div class="chart-container"><canvas id="chartZipf"></canvas></div></div>
+  <div class="chart-wrap"><div class="chart-title">Zipf Coefficient Over Time</div><div class="chart-container"><canvas id="chartZipfTrend"></canvas></div></div>
+</div>
+
+<!-- ══════ 03 HEAPS ══════ -->
+<div class="section" id="heaps">
+  <div class="section-hdr"><span class="section-num">03</span><h2 class="section-title">Heaps' Law Analysis</h2></div>
+  <p class="section-desc">Vocabulary growth as a function of corpus size. Natural languages exhibit beta between 0.4 and 0.6.</p><hr class="section-divider">
+  <div id="heapsStats"></div>
+  <div class="chart-wrap"><div class="chart-title">Unique Types vs Total Tokens</div><div class="chart-container"><canvas id="chartHeaps"></canvas></div></div>
+  <div class="chart-wrap"><div class="chart-title">Heaps' Beta Over Time</div><div class="chart-container"><canvas id="chartHeapsTrend"></canvas></div></div>
+</div>
+
+<!-- ══════ 04 NETWORK ══════ -->
+<div class="section" id="network">
+  <div class="section-hdr"><span class="section-num">04</span><h2 class="section-title">Network Topology</h2></div>
+  <p class="section-desc">Social network structure from citizen interactions. Compares clustering and path lengths to random graph baselines.</p><hr class="section-divider">
+  <div id="networkStats" class="metrics-row"></div>
+  <div class="chart-grid">
+    <div class="chart-wrap"><div class="chart-title">Degree Distribution</div><div class="chart-container"><canvas id="chartDegree"></canvas></div></div>
+    <div class="chart-wrap"><div class="chart-title">Structured vs Random</div><div class="chart-container"><canvas id="chartClustering"></canvas></div></div>
+  </div>
+  <div id="centralNodes"></div>
+</div>
+
+<!-- ══════ 05 GROWTH ══════ -->
+<div class="section" id="growth">
+  <div class="section-hdr"><span class="section-num">05</span><h2 class="section-title">Vocabulary Growth</h2></div>
+  <p class="section-desc">Shared vocabulary size over simulation ticks, with best-fit growth model.</p><hr class="section-divider">
+  <div id="growthStats"></div>
+  <div class="chart-wrap"><div class="chart-title">Shared Vocabulary Over Time</div><div class="chart-container"><canvas id="chartGrowth"></canvas></div></div>
+  <div class="chart-wrap"><div class="chart-title">Population &amp; Vocab (Snapshots)</div><div class="chart-container"><canvas id="chartSnapshots"></canvas></div></div>
+</div>
+
+<!-- ══════ 06 INFLUENCE ══════ -->
+<div class="section" id="influence">
+  <div class="section-hdr"><span class="section-num">06</span><h2 class="section-title">Influence &amp; Cascades</h2></div>
+  <p class="section-desc">How vocabulary spreads through the population. Linguistic influence ranking and information cascade tracking.</p><hr class="section-divider">
+  <div class="chart-wrap"><div class="chart-title">Linguistic Influence Ranking</div><div class="chart-container"><canvas id="chartInfluence"></canvas></div></div>
+  <div id="cascadeList"></div>
+</div>
+
+<!-- ══════ 07 DICTIONARY ══════ -->
+<div class="section" id="dictionary">
+  <div class="section-hdr"><span class="section-num">07</span><h2 class="section-title">Language Dictionary</h2></div>
+  <p class="section-desc">Complete lexicon data: shared community words and personal citizen vocabularies.</p><hr class="section-divider">
+  <h4 style="font-family:var(--mono);font-size:.75rem;color:var(--amber);letter-spacing:1px;margin-bottom:10px">SHARED LEXICON</h4>
+  <div class="filter-row"><input class="filter-input" id="sharedSearch" placeholder="Search sounds or meanings..."><button class="btn" id="exportSharedCSV">Export CSV</button></div>
+  <div class="tbl-scroll" id="sharedTableWrap"></div>
+  <div class="chart-wrap" style="margin-top:20px"><div class="chart-title">Vocabulary Size Per Citizen</div><div class="chart-container"><canvas id="chartCitizenVocab"></canvas></div></div>
+  <h4 style="font-family:var(--mono);font-size:.75rem;color:var(--amber);letter-spacing:1px;margin:24px 0 10px">PERSONAL LEXICON (ALL CITIZENS)</h4>
+  <div class="filter-row"><input class="filter-input" id="personalSearch" placeholder="Search by citizen, sound, meaning..."><button class="btn" id="exportPersonalCSV">Export CSV</button></div>
+  <div class="tbl-scroll" id="personalTableWrap"></div>
+</div>
+
+<!-- ══════ 08 PHONEMES ══════ -->
+<div class="section" id="phonemes">
+  <div class="section-hdr"><span class="section-num">08</span><h2 class="section-title">Phoneme Analysis</h2></div>
+  <p class="section-desc">Character-level frequency analysis of all lexicon sounds, color-coded by vowel/consonant. Radar chart shows archetype phoneme profiles.</p><hr class="section-divider">
+  <div class="chart-wrap"><div class="chart-title">Phoneme (Character) Frequencies</div><div class="chart-container"><canvas id="chartPhoneme"></canvas></div></div>
+  <div class="chart-wrap"><div class="chart-title">Archetype Phoneme Profiles</div><div class="chart-container"><canvas id="chartPhonemeRadar"></canvas></div></div>
+</div>
+
+<!-- ══════ 09 EFFICIENCY ══════ -->
+<div class="section" id="efficiency">
+  <div class="section-hdr"><span class="section-num">09</span><h2 class="section-title">Communication Efficiency</h2></div>
+  <p class="section-desc">Success rate and utterance length trends, plus context type breakdown.</p><hr class="section-divider">
+  <div class="chart-wrap"><div class="chart-title">Success Rate &amp; Utterance Length Over Time</div><div class="chart-container"><canvas id="chartEfficiency"></canvas></div></div>
+  <div class="chart-grid">
+    <div class="chart-wrap"><div class="chart-title">Context Type Distribution</div><div class="chart-container"><canvas id="chartContextTypes"></canvas></div></div>
+    <div id="efficiencyStats"></div>
+  </div>
+</div>
+
+<!-- ══════ 10 SOCIAL ══════ -->
+<div class="section" id="social">
+  <div class="section-hdr"><span class="section-num">10</span><h2 class="section-title">Social Network</h2></div>
+  <p class="section-desc">Relationship graph data: bond types, strengths, and distribution.</p><hr class="section-divider">
+  <div class="chart-grid">
+    <div class="chart-wrap"><div class="chart-title">Relationship Type Distribution</div><div class="chart-container"><canvas id="chartRelTypes"></canvas></div></div>
+    <div class="chart-wrap"><div class="chart-title">Relationship Score Histogram</div><div class="chart-container"><canvas id="chartRelHist"></canvas></div></div>
+  </div>
+  <div class="chart-grid" style="margin-top:16px">
+    <div id="strongBonds"></div>
+    <div id="strongRivalries"></div>
+  </div>
+  <div style="margin-top:16px"><div class="filter-row"><input class="filter-input" id="relSearch" placeholder="Filter by citizen name or type..."></div><div class="tbl-scroll" id="relTableWrap"></div></div>
+</div>
+
+<!-- ══════ 11 SURVIVAL ══════ -->
+<div class="section" id="survival">
+  <div class="section-hdr"><span class="section-num">11</span><h2 class="section-title">Survival &amp; Population</h2></div>
+  <p class="section-desc">Death causes, age distributions, and population trends.</p><hr class="section-divider">
+  <div class="chart-grid">
+    <div class="chart-wrap"><div class="chart-title">Death Causes</div><div class="chart-container"><canvas id="chartDeathCause"></canvas></div></div>
+    <div class="chart-wrap"><div class="chart-title">Age at Death Distribution</div><div class="chart-container"><canvas id="chartDeathAge"></canvas></div></div>
+  </div>
+  <div class="chart-wrap"><div class="chart-title">Population Over Time</div><div class="chart-container"><canvas id="chartPopulation"></canvas></div></div>
+</div>
+
+<!-- ══════ 12 WORLDS ══════ -->
+<div class="section" id="worlds">
+  <div class="section-hdr"><span class="section-num">12</span><h2 class="section-title">World History</h2></div>
+  <p class="section-desc">Comparison of all simulation worlds.</p><hr class="section-divider">
+  <div class="chart-wrap"><div class="chart-title">Cross-World Comparison</div><div class="chart-container"><canvas id="chartWorlds"></canvas></div></div>
+  <div id="milestoneList"></div>
+</div>
+
+<!-- ══════ 13 TRAINING ══════ -->
+<div class="section" id="training">
+  <div class="section-hdr"><span class="section-num">13</span><h2 class="section-title">Training History</h2></div>
+  <p class="section-desc">Additive training runs per citizen: dataset composition across versions.</p><hr class="section-divider">
+  <div class="tbl-scroll" id="trainingTableWrap"></div>
+  <div class="chart-wrap"><div class="chart-title">Training Dataset Composition</div><div class="chart-container"><canvas id="chartTraining"></canvas></div></div>
+</div>
+
+<!-- ══════ 14 METHODOLOGY ══════ -->
+<div class="section" id="methodology">
+  <div class="section-hdr"><span class="section-num">14</span><h2 class="section-title">Methodology</h2></div>
+  <p class="section-desc">How the simulation, language metrics, and network analysis work.</p><hr class="section-divider">
+  <div class="method-block"><h4>Simulation Architecture</h4><p>Each citizen is an independent AI model (fine-tuned LLM) that perceives its environment, makes decisions, and generates vocalizations. Citizens live in a simulated wilderness with latitude-based climate, biomes, predators, prey, and survival mechanics. Language emerges through repeated contextual interactions -- when two citizens encounter the same stimulus and both vocalize, the co-occurrence of sound and context gradually binds them into meaning.</p></div>
+  <div class="method-block"><h4>Zipf's Law Computation</h4><p>We count the frequency of each unique sound in the full utterance log. Sounds are ranked by frequency. On a log-log plot, Zipf's Law predicts a linear relationship with slope approximately <code>-1.0</code>. We compute the coefficient via OLS linear regression on <code>log(rank)</code> vs <code>log(frequency)</code>. Natural human languages typically show coefficients between <code>-0.8</code> and <code>-1.2</code>.</p></div>
+  <div class="method-block"><h4>Heaps' Law Computation</h4><p>Heaps' Law models the relationship: <code>V(n) = K * n^beta</code>. Beta values between <code>0.4</code> and <code>0.6</code> indicate natural-language-like sublinear growth. Values near <code>1.0</code> mean every token is novel. Values near <code>0.0</code> mean the vocabulary saturated early.</p></div>
+  <div class="method-block"><h4>Network Analysis</h4><p>The social network is constructed from interaction history. Edges are weighted by interaction frequency and relationship score. We compute the <strong>clustering coefficient</strong>, <strong>average path length</strong>, and <strong>degree distribution</strong>. These are compared to an Erdos-Renyi random graph with the same parameters.</p></div>
+  <div class="method-block"><h4>PageRank / Influence</h4><p>Linguistic influence uses modified PageRank on the vocabulary transfer graph. An edge from A to B exists if B learned a sound that A established. Citizens with high PageRank are vocabulary hubs.</p></div>
+  <div class="method-block"><h4>Known Limitations</h4><p>Small population (6-15 citizens) limits statistical power. The LLM substrate introduces biases. Phoneme analysis operates at character level. Zipf and Heaps fits may be noisy at low token counts. Cross-world comparisons are confounded by parameter changes.</p></div>
+  <div class="citation">WildMind: Emergent Language in Self-Teaching AI Populations. 2026. Available at: <a href="https://cosmic-piroshki-aeb441.netlify.app" target="_blank">https://cosmic-piroshki-aeb441.netlify.app</a></div>
+</div>
+
+<!-- ══════ 15 API DOCS ══════ -->
+<div class="section" id="api-docs">
+  <div class="section-hdr"><span class="section-num">15</span><h2 class="section-title">API Documentation</h2></div>
+  <p class="section-desc">Public endpoints for programmatic access to simulation data.</p><hr class="section-divider">
+  <div class="method-block"><h4>Base URL</h4><pre>https://cosmic-piroshki-aeb441.netlify.app</pre></div>
+  <div class="method-block"><h4>GET /api/state</h4><p>Full simulation state. Primary endpoint used by this page.</p><pre>curl -s https://cosmic-piroshki-aeb441.netlify.app/api/state | jq '.shared_lexicon[:3]'</pre></div>
+  <div class="method-block"><h4>GET /api/api?endpoint=meta</h4><p>API metadata and available endpoints.</p><pre>curl -s "https://cosmic-piroshki-aeb441.netlify.app/api/api?endpoint=meta" | jq .</pre></div>
+  <div class="method-block"><h4>GET /api/api?endpoint=citizens</h4><p>All alive citizens with positions, mood, energy, personality, vocabulary.</p><pre>curl -s "https://cosmic-piroshki-aeb441.netlify.app/api/api?endpoint=citizens"</pre></div>
+  <div class="method-block"><h4>GET /api/api?endpoint=lexicon</h4><p>Shared and personal lexicons.</p><pre>curl -s "https://cosmic-piroshki-aeb441.netlify.app/api/api?endpoint=lexicon"</pre></div>
+  <div class="method-block"><h4>GET /api/api?endpoint=interactions&amp;limit=50&amp;offset=0</h4><p>Paginated interaction history. Max 500 per page.</p></div>
+  <div class="method-block"><h4>GET /api/api?endpoint=science</h4><p>Latest science metrics: Zipf, Heaps, network, cascades, growth, efficiency, semantic fields.</p></div>
+  <div class="method-block"><h4>GET /api/api?endpoint=utterances&amp;limit=50&amp;citizen_id=ID</h4><p>Utterance log. Optionally filter by citizen. Max 500.</p></div>
+  <div class="method-block"><h4>GET /api/api?endpoint=history&amp;table=TABLE&amp;limit=50</h4><p>Historical data. Allowed tables: <code>science_metrics</code>, <code>state_snapshots</code>, <code>utterance_log</code>.</p></div>
+  <div class="method-block"><h4>Response Format</h4><p>All endpoints return JSON with CORS headers. Error responses include an <code>error</code> field.</p></div>
+</div>
+
+<!-- ══════ 16 EXPORT ══════ -->
+<div class="section" id="export">
+  <div class="section-hdr"><span class="section-num">16</span><h2 class="section-title">Data Export</h2></div>
+  <p class="section-desc">Download current simulation data for offline analysis.</p><hr class="section-divider">
+  <div class="btn-row">
+    <button class="btn" id="dlSharedLex">Shared Lexicon CSV</button>
+    <button class="btn" id="dlFullLex">Full Lexicon CSV</button>
+    <button class="btn" id="dlCitizens">Citizens CSV</button>
+    <button class="btn" id="dlScience">Science JSON</button>
+    <button class="btn" id="dlRelationships">Relationships CSV</button>
+    <button class="btn" id="dlSnapshots">Snapshots CSV</button>
+  </div>
+  <p style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-top:8px">Generated from current API response. Refresh for latest.</p>
+</div>
+
+</main>
+</div>
+
+<footer class="foot">
+  <div class="foot-logo"><span class="w">WILD</span><span class="m">MIND</span></div>
+  <div class="foot-text"><a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener">Support this project</a> &middot; Research-grade analysis of emergent AI language</div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+
+/* ═══════════════════════════════════════════
+   CHART.JS GLOBAL DEFAULTS
+   ═══════════════════════════════════════════ */
+Chart.defaults.color = '#706a5e';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+Chart.defaults.font.family = "'JetBrains Mono', monospace";
+Chart.defaults.font.size = 11;
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(10,10,15,0.95)';
+Chart.defaults.plugins.tooltip.borderColor = '#d4a574';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.titleFont = { family: "'JetBrains Mono', monospace", size: 11 };
+Chart.defaults.plugins.tooltip.bodyFont = { family: "'Source Serif 4', serif", size: 12 };
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 4;
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.pointStyleWidth = 8;
+Chart.defaults.animation.duration = 1200;
+Chart.defaults.animation.easing = 'easeOutQuart';
+
+/* ═══════════════════════════════════════════
+   GLOBALS & HELPERS
+   ═══════════════════════════════════════════ */
+var D = null;
+var charts = {};
+var VOW = {a:1,e:1,i:1,o:1,u:1};
+var COL = {a:'#d4a574',g:'#4a9e6e',b:'#5a9bba',r:'#c44a20',d:'#706a5e',m:'#3a3640',t:'#ddd5c4'};
+
+function $(id){ return document.getElementById(id) }
+function E(s){ var d = document.createElement('div'); d.textContent = s; return d.innerHTML }
+function fmt(n){ if(n==null) return '--'; if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/1e3).toFixed(1)+'K'; return String(n) }
+function pct(n){ return n==null ? '--' : (n*100).toFixed(1)+'%' }
+function f2(n){ return n==null ? '--' : parseFloat(n).toFixed(2) }
+function f3(n){ return n==null ? '--' : parseFloat(n).toFixed(3) }
+function f4(n){ return n==null ? '--' : parseFloat(n).toFixed(4) }
+function cn(id){ if(!D||!D.citizens_db) return id||'--'; for(var i=0;i<D.citizens_db.length;i++) if(D.citizens_db[i].id===id) return D.citizens_db[i].name||id; return id||'--' }
+
+function destroyChart(key){
+  if(charts[key]){ charts[key].destroy(); delete charts[key]; }
+}
+
+function makeGradient(ctx, canvas, colorTop, colorBot){
+  var g = ctx.createLinearGradient(0, 0, 0, canvas.height || 300);
+  g.addColorStop(0, colorTop);
+  g.addColorStop(1, colorBot);
+  return g;
+}
+
+function dlCSV(fn,hd,rows){
+  var l=[hd.join(',')];
+  for(var i=0;i<rows.length;i++){
+    var c=[];for(var j=0;j<rows[i].length;j++) c.push('"'+String(rows[i][j]||'').replace(/"/g,'""')+'"');
+    l.push(c.join(','));
+  }
+  var b=new Blob([l.join('\n')],{type:'text/csv'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=fn; a.click();
+}
+function dlJSON(fn,o){
+  var b=new Blob([JSON.stringify(o,null,2)],{type:'application/json'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=fn; a.click();
+}
+
+/* ═══════════════════════════════════════════
+   SORTABLE TABLE BUILDER
+   ═══════════════════════════════════════════ */
+function BT(el,hds,rows,opts){
+  opts=opts||{};var sC=-1,sD=1,filt=null;
+  function FR(){
+    var r=rows;
+    if(filt) r=r.filter(filt);
+    if(sC>=0) r=r.slice().sort(function(a,b){
+      var va=a[sC],vb=b[sC];var na=parseFloat(va),nb=parseFloat(vb);
+      if(!isNaN(na)&&!isNaN(nb)){va=na;vb=nb}else{if(typeof va==='string')va=va.toLowerCase();if(typeof vb==='string')vb=vb.toLowerCase()}
+      return va<vb?-sD:va>vb?sD:0;
+    });
+    return r;
+  }
+  function R(){
+    var fr=FR(),mx=opts.mx||500,html='<table><thead><tr>';
+    for(var i=0;i<hds.length;i++){var st=sC===i;html+='<th class="'+(st?'sorted':'')+'" data-c="'+i+'">'+E(hds[i])+'<span class="sa">'+(st?(sD>0?'\u25B2':'\u25BC'):'\u25B2')+'</span></th>'}
+    html+='</tr></thead><tbody>';
+    var sh=fr.slice(0,mx);
+    for(var ri=0;ri<sh.length;ri++){var rw=sh[ri];var da=opts.rd?opts.rd(rw):'';html+='<tr '+da+'>';for(var ci=0;ci<rw.length;ci++){var v=rw[ci];html+=v==null?'<td style="color:var(--muted)">--</td>':'<td>'+E(String(v))+'</td>'}html+='</tr>'}
+    if(!sh.length)html+='<tr><td colspan="'+hds.length+'" style="color:var(--muted);text-align:center;padding:20px">No data</td></tr>';
+    else if(fr.length>mx) html+='<tr><td colspan="'+hds.length+'" style="color:var(--muted);text-align:center;padding:12px">'+mx+' of '+fr.length+' shown</td></tr>';
+    html+='</tbody></table>';
+    el.innerHTML=html;
+    var ths=el.querySelectorAll('thead th');
+    for(var ti=0;ti<ths.length;ti++)(function(th){th.onclick=function(){var c=parseInt(th.getAttribute('data-c'));if(sC===c)sD*=-1;else{sC=c;sD=1}R()}})(ths[ti]);
+    if(opts.click){var trs=el.querySelectorAll('tbody tr');for(var tri=0;tri<trs.length;tri++){trs[tri].style.cursor='pointer';(function(tr){tr.onclick=function(){opts.click(tr)}})(trs[tri])}}
+  }
+  R();
+  return{r:R,sf:function(fn){filt=fn;R()}}
+}
+
+/* ═══════════════════════════════════════════
+   INTERSECTION OBSERVER FOR CHART ANIMATION
+   ═══════════════════════════════════════════ */
+var chartObserver = new IntersectionObserver(function(entries){
+  entries.forEach(function(entry){
+    if(entry.isIntersecting){
+      var canvas = entry.target;
+      var key = canvas.id;
+      if(charts[key] && typeof charts[key].update === 'function'){
+        charts[key].update();
+      }
+      chartObserver.unobserve(canvas);
+    }
+  });
+}, {threshold: 0.1});
+
+/* ═══════════════════════════════════════════
+   LOADING
+   ═══════════════════════════════════════════ */
+function sL(p,t){ $('loadingBar').style.width=p+'%'; $('loadingText').textContent=t }
+
+var API_KEY=(function(){var m=document.querySelector('meta[name="api-key"]');if(m)return m.getAttribute('content');var p=new URLSearchParams(window.location.search);return p.get('key')||''})();
+function apiFetch(url){var o={};if(API_KEY)o.headers={'x-api-key':API_KEY};return fetch(url,o)}
+
+function load(){
+  sL(10,'Connecting...'); sL(30,'Fetching state...');
+  apiFetch('/api/state').then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); sL(60,'Parsing...'); return r.json() }).then(function(d){
+    D=d; sL(80,'Rendering...');
+    setTimeout(function(){ renderAll(); sL(100,'Complete'); setTimeout(function(){ $('loadingOverlay').classList.add('hidden') },400) },60);
+  }).catch(function(e){ sL(100,'Error: '+e.message); console.error(e); setTimeout(load,3000) });
+}
+
+/* ═══════════════════════════════════════════
+   RENDER ALL SECTIONS
+   ═══════════════════════════════════════════ */
+function renderAll(){
+  var fns=[rOverview,rZipf,rHeaps,rNetwork,rGrowth,rInfluence,rDict,rPhonemes,rEfficiency,rSocial,rSurvival,rWorlds,rTraining,rExports];
+  for(var i=0;i<fns.length;i++) try{fns[i]()}catch(e){console.error('Render error in section '+i+':',e)}
+}
+
+/* ═══════════════════════════════════════════
+   01 OVERVIEW
+   ═══════════════════════════════════════════ */
+function rOverview(){
+  var ls=D.live_state||{}, us=D.utterance_stats||{}, sci=D.science||{}, net=sci.network||{}, snaps=D.snapshots||[];
+  var last=snaps.length?snaps[snaps.length-1]:{};
+  var tick=ls.tick||last.tick||'--', sv=(D.shared_lexicon||[]).length;
+  var sr=us.total_utterances>0?(us.successful/us.total_utterances):(last.communication_success_rate||0);
+  var stage=last.stage||ls.stage||'--';
+
+  $('overviewStage').innerHTML=''; var badge=document.createElement('span'); badge.className='stage-badge'; badge.textContent='Stage: '+stage; $('overviewStage').appendChild(badge);
+
+  var el=$('overviewMetrics'); el.innerHTML='';
+
+  var cards = [
+    {l:'Total Utterances', v:fmt(us.total_utterances), cls:''},
+    {l:'Shared Vocab', v:sv, cls:'green', spark:'vocab'},
+    {l:'Active Speakers', v:us.active_speakers||'--', cls:'blue'},
+    {l:'Success Rate', v:pct(sr), cls:sr>0.3?'green':'red', spark:'success'},
+    {l:'Clustering', v:f3(net.clustering_coefficient), cls:'blue'},
+    {l:'World Tick', v:tick, cls:''}
+  ];
+
+  cards.forEach(function(c){
+    var d=document.createElement('div'); d.className='metric-card';
+    d.innerHTML='<div class="metric-label">'+E(c.l)+'</div><div class="metric-val '+c.cls+'">'+E(String(c.v))+'</div>';
+    if(c.spark){
+      var sparkDiv = document.createElement('div'); sparkDiv.className='metric-spark';
+      var cv = document.createElement('canvas'); cv.id='spark_'+c.spark; cv.style.width='100%'; cv.style.height='40px';
+      sparkDiv.appendChild(cv);
+      d.appendChild(sparkDiv);
+    }
+    el.appendChild(d);
+  });
+
+  // Sparklines
+  if(snaps.length > 2){
+    var vocabData = snaps.map(function(s){ return s.shared_vocab_size||0 });
+    var successData = snaps.map(function(s){ return s.communication_success_rate||0 });
+    var sparkLabels = snaps.map(function(s){ return s.tick });
+
+    setTimeout(function(){
+      var sparkVocab = $('spark_vocab');
+      if(sparkVocab){
+        destroyChart('spark_vocab');
+        charts['spark_vocab'] = new Chart(sparkVocab, {
+          type:'line',
+          data:{ labels:sparkLabels, datasets:[{ data:vocabData, borderColor:COL.g, borderWidth:1.5, pointRadius:0, fill:false, tension:0.4 }] },
+          options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{enabled:false}}, scales:{x:{display:false},y:{display:false}}, animation:{duration:800,easing:'easeOutQuart'} }
+        });
+      }
+      var sparkSuccess = $('spark_success');
+      if(sparkSuccess){
+        destroyChart('spark_success');
+        charts['spark_success'] = new Chart(sparkSuccess, {
+          type:'line',
+          data:{ labels:sparkLabels, datasets:[{ data:successData, borderColor:COL.a, borderWidth:1.5, pointRadius:0, fill:false, tension:0.4 }] },
+          options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{enabled:false}}, scales:{x:{display:false},y:{display:false}}, animation:{duration:800,easing:'easeOutQuart'} }
+        });
+      }
+    }, 100);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   02 ZIPF'S LAW
+   ═══════════════════════════════════════════ */
+function rZipf(){
+  var z=(D.science||{}).zipf||{};
+  var el=$('zipfStats'); el.innerHTML='';
+  [{t:'Coefficient: '+f3(z.zipf_coefficient),c:'amber'},{t:'R\u00B2: '+f3(z.r_squared),c:'green'},{t:'Target: -1.000',c:'blue'}].forEach(function(s){
+    var sp=document.createElement('span'); sp.className='chart-stat '+s.c; sp.textContent=s.t; el.appendChild(sp);
+  });
+
+  // Build frequency map
+  var fm={}, lex=D.lexicon_by_citizen||{};
+  for(var cid in lex) if(lex.hasOwnProperty(cid)) for(var i=0;i<lex[cid].length;i++){
+    var s=lex[cid][i].sound; fm[s]=(fm[s]||0)+(lex[cid][i].times_used||1);
+  }
+  var ent=[]; for(var k in fm) if(fm.hasOwnProperty(k)) ent.push([k,fm[k]]);
+  ent.sort(function(a,b){ return b[1]-a[1] });
+
+  if(ent.length > 1){
+    var scatterData=[], idealLine=[];
+    var maxLogR = Math.log10(ent.length);
+    var maxLogF = Math.log10(ent[0][1]);
+    var minLogF = Math.log10(Math.max(1, ent[ent.length-1][1]));
+
+    for(var di=0; di<ent.length; di++){
+      scatterData.push({ x: Math.log10(di+1), y: Math.log10(ent[di][1]) });
+    }
+    // Ideal Zipf line (slope -1)
+    for(var zi=0; zi<=50; zi++){
+      var xVal = (zi/50)*maxLogR;
+      var yVal = maxLogF - xVal;
+      if(yVal >= minLogF - 0.2) idealLine.push({ x:xVal, y:yVal });
+    }
+
+    destroyChart('chartZipf');
+    charts['chartZipf'] = new Chart($('chartZipf'), {
+      type:'scatter',
+      data:{
+        datasets:[
+          { label:'WildMind Data', data:scatterData, backgroundColor:'rgba(212,165,116,0.7)', borderColor:COL.a, pointRadius:4, pointHoverRadius:6, order:2 },
+          { label:'Ideal Zipf (slope -1)', data:idealLine, type:'line', borderColor:COL.g, borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false, order:1 }
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:2,
+        scales:{
+          x:{ title:{ display:true, text:'log(Rank)', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' } },
+          y:{ title:{ display:true, text:'log(Frequency)', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' } }
+        },
+        plugins:{
+          tooltip:{
+            callbacks:{
+              label:function(ctx){
+                if(ctx.datasetIndex===0 && ent[ctx.dataIndex])
+                  return ent[ctx.dataIndex][0]+': rank '+(ctx.dataIndex+1)+', freq '+ent[ctx.dataIndex][1];
+                return 'Ideal: '+ctx.parsed.x.toFixed(2)+', '+ctx.parsed.y.toFixed(2);
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Zipf trend over time
+  var hist = D.science_history||[];
+  var trendPts=[];
+  for(var hi=0; hi<hist.length; hi++){
+    var m=hist[hi].metrics;
+    if(m && m.zipf && m.zipf.zipf_coefficient!=null && isFinite(m.zipf.zipf_coefficient))
+      trendPts.push({ x:hist[hi].tick, y:m.zipf.zipf_coefficient });
+  }
+  if(trendPts.length >= 2){
+    var trendLabels=trendPts.map(function(p){return p.x});
+    var trendVals=trendPts.map(function(p){return p.y});
+    var refLine=trendLabels.map(function(){return -1});
+
+    destroyChart('chartZipfTrend');
+    charts['chartZipfTrend'] = new Chart($('chartZipfTrend'), {
+      type:'line',
+      data:{
+        labels:trendLabels,
+        datasets:[
+          { label:'Zipf Coefficient', data:trendVals, borderColor:COL.a, backgroundColor:'rgba(212,165,116,0.1)', borderWidth:2, pointRadius:3, pointBackgroundColor:COL.a, fill:true, tension:0.3 },
+          { label:'Natural Target (-1.0)', data:refLine, borderColor:COL.g, borderWidth:1.5, borderDash:[6,4], pointRadius:0, fill:false }
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:2.5,
+        scales:{
+          x:{ title:{ display:true, text:'Tick', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' } },
+          y:{ title:{ display:true, text:'Coefficient', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' } }
+        }
+      }
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════
+   03 HEAPS' LAW
+   ═══════════════════════════════════════════ */
+function rHeaps(){
+  var hp=(D.science||{}).heaps||{};
+  var el=$('heapsStats'); el.innerHTML='';
+  [{t:'Beta: '+f3(hp.heaps_beta),c:'amber'},{t:'K: '+f2(hp.heaps_K),c:'green'},{t:'R\u00B2: '+f3(hp.r_squared),c:'blue'}].forEach(function(s){
+    var sp=document.createElement('span'); sp.className='chart-stat '+s.c; sp.textContent=s.t; el.appendChild(sp);
+  });
+
+  var gd=hp.growth_data||[];
+  if(gd.length > 1){
+    var scatterData=[], fittedCurve=[], bandUpper=[], bandLower=[];
+    var tks=gd.map(function(d){return d.total_tokens||d.tokens||0});
+    var tps=gd.map(function(d){return d.unique_types||d.types||0});
+    var maxT=Math.max.apply(null,tks)||1;
+
+    for(var i=0; i<gd.length; i++){
+      scatterData.push({ x:tks[i], y:tps[i] });
+    }
+
+    if(hp.heaps_K && hp.heaps_beta){
+      for(var fi=0; fi<=60; fi++){
+        var xt=(fi/60)*maxT;
+        var yFit=hp.heaps_K*Math.pow(Math.max(1,xt),hp.heaps_beta);
+        var yUpper=hp.heaps_K*Math.pow(Math.max(1,xt),0.6);
+        var yLower=hp.heaps_K*Math.pow(Math.max(1,xt),0.4);
+        fittedCurve.push({x:xt,y:yFit});
+        bandUpper.push({x:xt,y:yUpper});
+        bandLower.push({x:xt,y:yLower});
+      }
+    }
+
+    var datasets=[
+      { label:'Observed Data', data:scatterData, backgroundColor:'rgba(212,165,116,0.7)', borderColor:COL.a, pointRadius:3, pointHoverRadius:5, showLine:true, borderWidth:1.5, tension:0, fill:false, order:3 }
+    ];
+    if(fittedCurve.length){
+      datasets.push({ label:'Fitted Curve (K*n^beta)', data:fittedCurve, type:'line', borderColor:COL.a, borderWidth:2, pointRadius:0, fill:false, order:2 });
+      datasets.push({ label:'Natural Range (beta 0.4-0.6)', data:bandUpper, type:'line', borderColor:'rgba(74,158,110,0.3)', borderWidth:1, pointRadius:0, fill:'+1', backgroundColor:'rgba(74,158,110,0.08)', order:1 });
+      datasets.push({ label:'', data:bandLower, type:'line', borderColor:'rgba(74,158,110,0.3)', borderWidth:1, pointRadius:0, fill:false, order:1 });
+    }
+
+    destroyChart('chartHeaps');
+    charts['chartHeaps'] = new Chart($('chartHeaps'), {
+      type:'scatter',
+      data:{ datasets:datasets },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:2,
+        scales:{
+          x:{ title:{ display:true, text:'Total Tokens', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' } },
+          y:{ title:{ display:true, text:'Unique Types', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' } }
+        },
+        plugins:{ legend:{ labels:{ filter:function(item){ return item.text !== '' } } } }
+      }
+    });
+  }
+
+  // Heaps beta trend
+  var hist=D.science_history||[], trendPts=[];
+  for(var hi=0; hi<hist.length; hi++){
+    var m=hist[hi].metrics;
+    if(m && m.heaps && m.heaps.heaps_beta!=null && isFinite(m.heaps.heaps_beta))
+      trendPts.push({ x:hist[hi].tick, y:m.heaps.heaps_beta });
+  }
+  if(trendPts.length >= 2){
+    var labels=trendPts.map(function(p){return p.x});
+    var vals=trendPts.map(function(p){return p.y});
+    var bandHi=labels.map(function(){return 0.6});
+    var bandLo=labels.map(function(){return 0.4});
+
+    destroyChart('chartHeapsTrend');
+    charts['chartHeapsTrend'] = new Chart($('chartHeapsTrend'), {
+      type:'line',
+      data:{
+        labels:labels,
+        datasets:[
+          { label:"Heaps' Beta", data:vals, borderColor:COL.g, backgroundColor:'rgba(74,158,110,0.1)', borderWidth:2, pointRadius:3, pointBackgroundColor:COL.g, fill:true, tension:0.3 },
+          { label:'Natural Range Upper (0.6)', data:bandHi, borderColor:'rgba(74,158,110,0.4)', borderWidth:1, borderDash:[4,4], pointRadius:0, fill:'+1', backgroundColor:'rgba(74,158,110,0.06)' },
+          { label:'Natural Range Lower (0.4)', data:bandLo, borderColor:'rgba(74,158,110,0.4)', borderWidth:1, borderDash:[4,4], pointRadius:0, fill:false }
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:2.5,
+        scales:{
+          x:{ title:{ display:true, text:'Tick', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' } },
+          y:{ title:{ display:true, text:'Beta', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' } }
+        }
+      }
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════
+   04 NETWORK TOPOLOGY
+   ═══════════════════════════════════════════ */
+function rNetwork(){
+  var net=(D.science||{}).network||{}, comp=net.comparison_to_random||{};
+  var el=$('networkStats'); el.innerHTML='';
+
+  // Metric cards for network
+  var netMetrics = [
+    {l:'Clustering', v:f3(net.clustering_coefficient), cls:'amber'},
+    {l:'Avg Path Length', v:f2(net.avg_path_length), cls:'green'},
+    {l:'Edge Density', v:f3(net.edge_density), cls:'blue'},
+    {l:'Edges', v:net.edge_count||'--', cls:''}
+  ];
+  netMetrics.forEach(function(m){
+    var d=document.createElement('div'); d.className='metric-card';
+    d.innerHTML='<div class="metric-label">'+E(m.l)+'</div><div class="metric-val '+m.cls+'">'+E(String(m.v))+'</div>';
+    el.appendChild(d);
+  });
+
+  // Degree Distribution
+  var dg=net.degree_distribution||{}, degs=Object.keys(dg).map(Number).sort(function(a,b){return a-b});
+  if(degs.length){
+    destroyChart('chartDegree');
+    charts['chartDegree'] = new Chart($('chartDegree'), {
+      type:'bar',
+      data:{
+        labels:degs.map(String),
+        datasets:[{ label:'Node Count', data:degs.map(function(d){return dg[d]}), backgroundColor:'rgba(90,155,186,0.7)', borderColor:COL.b, borderWidth:1, borderRadius:3 }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:1.3,
+        scales:{
+          x:{ title:{ display:true, text:'Degree', color:COL.d }, grid:{ display:false } },
+          y:{ title:{ display:true, text:'Count', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' }, beginAtZero:true }
+        },
+        plugins:{ legend:{display:false} }
+      }
+    });
+  }
+
+  // Clustering vs Random (Doughnut)
+  var wcVal = net.clustering_coefficient||0;
+  var rcVal = comp.random_clustering||0;
+  destroyChart('chartClustering');
+  charts['chartClustering'] = new Chart($('chartClustering'), {
+    type:'doughnut',
+    data:{
+      labels:['WildMind Clustering','Random Baseline','Remaining'],
+      datasets:[{
+        data:[wcVal, rcVal, Math.max(0, 1-wcVal-rcVal)],
+        backgroundColor:['rgba(212,165,116,0.8)','rgba(58,54,64,0.6)','rgba(20,20,29,0.3)'],
+        borderColor:['#d4a574','#3a3640','rgba(255,255,255,0.02)'],
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true, aspectRatio:1.3,
+      cutout:'55%',
+      plugins:{
+        legend:{ position:'bottom', labels:{ font:{size:10}, padding:12, filter:function(item){ return item.text !== 'Remaining' } } },
+        tooltip:{ callbacks:{ label:function(ctx){ return ctx.label+': '+ctx.parsed.toFixed(4) } } }
+      }
+    }
+  });
+
+  // Central Nodes Table
+  var cn2=net.central_nodes||[];
+  if(cn2.length){
+    var t=document.createElement('div'); t.className='chart-wrap'; t.style.marginTop='16px';
+    var ti=document.createElement('div'); ti.className='chart-title'; ti.textContent='Central Nodes (PageRank/Degree)'; t.appendChild(ti);
+    var tb=document.createElement('div'); tb.className='tbl-scroll';
+    var tbl='<table><thead><tr><th>Citizen</th><th>Score</th></tr></thead><tbody>';
+    for(var ni=0;ni<Math.min(cn2.length,10);ni++){
+      var nd=cn2[ni];
+      tbl+='<tr><td>'+E(cn(nd.citizen_id||nd.id||nd.node))+'</td><td>'+f4(nd.pagerank||nd.centrality||nd.score||0)+'</td></tr>';
+    }
+    tbl+='</tbody></table>'; tb.innerHTML=tbl; t.appendChild(tb);
+    $('centralNodes').innerHTML=''; $('centralNodes').appendChild(t);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   05 VOCABULARY GROWTH
+   ═══════════════════════════════════════════ */
+function rGrowth(){
+  var gc=(D.science||{}).growth_curve||{};
+  var el=$('growthStats'); el.innerHTML='';
+  [{t:'Vocab: '+(gc.current_vocab_size||'--'),c:'amber'},{t:'Model: '+(gc.growth_model||'--'),c:'green'},{t:'R\u00B2: '+f3(gc.r_squared),c:'blue'}].forEach(function(s){
+    var sp=document.createElement('span'); sp.className='chart-stat '+s.c; sp.textContent=s.t; el.appendChild(sp);
+  });
+
+  var gd=gc.growth_data||[], snaps=D.snapshots||[];
+  var pd=gd.length>1 ? gd.map(function(d){return{t:d.tick||d.x||0,v:d.vocab_size||d.y||0}}) : snaps.map(function(s){return{t:s.tick,v:s.shared_vocab_size||0}});
+
+  if(pd.length > 1){
+    var labels=pd.map(function(p){return p.t});
+    var vals=pd.map(function(p){return p.v});
+
+    destroyChart('chartGrowth');
+    var cvEl=$('chartGrowth');
+    var growthCtx=cvEl.getContext('2d');
+    var grad=growthCtx.createLinearGradient(0,0,0,300);
+    grad.addColorStop(0,'rgba(212,165,116,0.2)');
+    grad.addColorStop(1,'rgba(212,165,116,0.01)');
+
+    charts['chartGrowth'] = new Chart(cvEl, {
+      type:'line',
+      data:{
+        labels:labels,
+        datasets:[{
+          label:'Shared Vocabulary',
+          data:vals,
+          borderColor:COL.a,
+          backgroundColor:grad,
+          borderWidth:2,
+          pointRadius:2,
+          pointBackgroundColor:COL.a,
+          fill:true,
+          tension:0.3
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:2,
+        scales:{
+          x:{ title:{ display:true, text:'Tick', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' } },
+          y:{ title:{ display:true, text:'Vocab Size', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' }, beginAtZero:true }
+        }
+      }
+    });
+  }
+
+  // Dual axis: population + vocab from snapshots
+  if(snaps.length > 1){
+    var snapLabels=snaps.map(function(s){return s.tick});
+    var popData=snaps.map(function(s){return s.alive_count||0});
+    var vocData=snaps.map(function(s){return s.shared_vocab_size||0});
+
+    destroyChart('chartSnapshots');
+    charts['chartSnapshots'] = new Chart($('chartSnapshots'), {
+      type:'line',
+      data:{
+        labels:snapLabels,
+        datasets:[
+          { label:'Population', data:popData, borderColor:COL.b, backgroundColor:'rgba(90,155,186,0.05)', borderWidth:2, pointRadius:1.5, fill:false, tension:0.3, yAxisID:'y' },
+          { label:'Shared Vocab', data:vocData, borderColor:COL.a, backgroundColor:'rgba(212,165,116,0.05)', borderWidth:2, pointRadius:1.5, fill:false, tension:0.3, yAxisID:'y1' }
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:2.5,
+        interaction:{ mode:'index', intersect:false },
+        scales:{
+          x:{ title:{ display:true, text:'Tick', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' } },
+          y:{ type:'linear', position:'left', title:{ display:true, text:'Population', color:COL.b }, grid:{ color:'rgba(255,255,255,0.03)' }, ticks:{color:COL.b} },
+          y1:{ type:'linear', position:'right', title:{ display:true, text:'Shared Vocab', color:COL.a }, grid:{ drawOnChartArea:false }, ticks:{color:COL.a} }
+        }
+      }
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════
+   06 INFLUENCE & CASCADES
+   ═══════════════════════════════════════════ */
+function rInfluence(){
+  var inf=((D.science||{}).influence||{}).influence_ranking||[];
+
+  if(inf.length){
+    var sorted=inf.slice().sort(function(a,b){return (b.influence_score||0)-(a.influence_score||0)});
+    var topN=sorted.slice(0,15);
+    var labels=topN.map(function(c){return cn(c.citizen)});
+    var scores=topN.map(function(c){return c.influence_score||0});
+    var wordsOrig=topN.map(function(c){return c.words_originated||0});
+
+    destroyChart('chartInfluence');
+    charts['chartInfluence'] = new Chart($('chartInfluence'), {
+      type:'bar',
+      data:{
+        labels:labels,
+        datasets:[{
+          label:'Influence Score',
+          data:scores,
+          backgroundColor:scores.map(function(v,i){
+            var opacity = 0.4 + 0.6*(1 - i/topN.length);
+            return 'rgba(212,165,116,'+opacity+')';
+          }),
+          borderColor:COL.a,
+          borderWidth:1,
+          borderRadius:3
+        }]
+      },
+      options:{
+        indexAxis:'horizontal',
+        responsive:true, maintainAspectRatio:true, aspectRatio:2,
+        scales:{
+          x:{ title:{ display:true, text:'Influence Score', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' }, beginAtZero:true },
+          y:{ grid:{ display:false } }
+        },
+        plugins:{
+          tooltip:{
+            callbacks:{
+              afterLabel:function(ctx){
+                return 'Words originated: '+(wordsOrig[ctx.dataIndex]||0);
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Cascades
+  var casc=(D.science||{}).cascades||[], cel=$('cascadeList');
+  if(!casc.length){ cel.innerHTML='<p style="font-family:var(--mono);font-size:.75rem;color:var(--muted);padding:20px">No cascade data available yet.</p>'; return }
+  var sortedCasc=casc.slice().sort(function(a,b){return(b.total_adopters||0)-(a.total_adopters||0)});
+  cel.innerHTML='';
+  for(var i=0;i<Math.min(sortedCasc.length,20);i++){
+    var c=sortedCasc[i], ad=c.adopters||[], tot=c.total_adopters||ad.length;
+    var card=document.createElement('div'); card.className='cascade-card';
+    var snd=document.createElement('span'); snd.className='cascade-sound'; snd.textContent=c.sound||''; card.appendChild(snd);
+    var mng=document.createElement('span'); mng.className='cascade-meaning'; mng.textContent=c.meaning||''; card.appendChild(mng);
+    var meta=document.createElement('div'); meta.className='cascade-meta';
+    meta.textContent='Origin: '+cn(c.origin||c.origin_citizen||'unknown')+' | Adopters: '+tot+(c.velocity?' | '+f2(c.velocity)+' adopters/tick':'');
+    card.appendChild(meta);
+    if(ad.length){
+      var adEl=document.createElement('div'); adEl.className='cascade-adopters';
+      adEl.textContent='Adopted by: '+ad.map(function(a){return cn(a.citizen_id||a)}).join(', ');
+      card.appendChild(adEl);
+    }
+    cel.appendChild(card);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   07 DICTIONARY
+   ═══════════════════════════════════════════ */
+function rDict(){
+  var shared=D.shared_lexicon||[];
+  var sR=shared.map(function(s){return[s.sound,s.meaning,f2(s.confidence),s.citizen_count||0,s.tick_established||'--',(s.established_by||[]).join(', ')]});
+  var sT=BT($('sharedTableWrap'),['Sound','Meaning','Conf','Citizens','Tick','Established By'],sR,{mx:300});
+  $('sharedSearch').oninput=function(e){var q=e.target.value.toLowerCase();sT.sf(q?function(r){return(r[0]+'|'+r[1]).toLowerCase().indexOf(q)>=0}:null)};
+
+  var lex=D.lexicon_by_citizen||{}, pR=[];
+  for(var cid in lex) if(lex.hasOwnProperty(cid)){
+    var nm=cn(cid);
+    for(var i=0;i<lex[cid].length;i++){
+      var en=lex[cid][i]; pR.push([nm,en.sound,en.meaning,f2(en.confidence),en.times_used||0,en.tick_learned||'--']);
+    }
+  }
+  var pT=BT($('personalTableWrap'),['Citizen','Sound','Meaning','Conf','Used','Tick'],pR,{mx:500});
+  $('personalSearch').oninput=function(e){var q=e.target.value.toLowerCase();pT.sf(q?function(r){return(r[0]+'|'+r[1]+'|'+r[2]).toLowerCase().indexOf(q)>=0}:null)};
+
+  // Citizen vocab sizes bar chart
+  var vocabSizes=[];
+  for(var vid in lex) if(lex.hasOwnProperty(vid)) vocabSizes.push({name:cn(vid), count:lex[vid].length});
+  vocabSizes.sort(function(a,b){return b.count-a.count});
+
+  if(vocabSizes.length){
+    destroyChart('chartCitizenVocab');
+    charts['chartCitizenVocab'] = new Chart($('chartCitizenVocab'), {
+      type:'bar',
+      data:{
+        labels:vocabSizes.map(function(v){return v.name}),
+        datasets:[{
+          label:'Vocabulary Size',
+          data:vocabSizes.map(function(v){return v.count}),
+          backgroundColor:'rgba(74,158,110,0.6)',
+          borderColor:COL.g,
+          borderWidth:1,
+          borderRadius:3
+        }]
+      },
+      options:{
+        indexAxis:'horizontal',
+        responsive:true, maintainAspectRatio:true, aspectRatio:Math.max(1.5, vocabSizes.length * 0.15 + 1),
+        scales:{
+          x:{ title:{ display:true, text:'Words Known', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' }, beginAtZero:true },
+          y:{ grid:{ display:false } }
+        },
+        plugins:{ legend:{display:false} }
+      }
+    });
+  }
+
+  $('exportSharedCSV').onclick=function(){dlCSV('wildmind_shared_lexicon.csv',['sound','meaning','confidence','citizen_count','tick_established','established_by'],sR)};
+  $('exportPersonalCSV').onclick=function(){dlCSV('wildmind_personal_lexicon.csv',['citizen','sound','meaning','confidence','times_used','tick_learned'],pR)};
+}
+
+/* ═══════════════════════════════════════════
+   08 PHONEME ANALYSIS
+   ═══════════════════════════════════════════ */
+function rPhonemes(){
+  var lex=D.lexicon_by_citizen||{}, cf={};
+  for(var cid in lex) if(lex.hasOwnProperty(cid)) for(var i=0;i<lex[cid].length;i++){
+    var s=(lex[cid][i].sound||'').toLowerCase().replace(/[^a-z]/g,'');
+    for(var j=0;j<s.length;j++) cf[s[j]]=(cf[s[j]]||0)+(lex[cid][i].times_used||1);
+  }
+  var sl=D.shared_lexicon||[];
+  for(var si=0;si<sl.length;si++){
+    var ss=(sl[si].sound||'').toLowerCase().replace(/[^a-z]/g,'');
+    for(var sj=0;sj<ss.length;sj++) cf[ss[sj]]=(cf[ss[sj]]||0)+(sl[si].citizen_count||1);
+  }
+  var sorted=[]; for(var ch in cf) if(cf.hasOwnProperty(ch)) sorted.push([ch,cf[ch]]);
+  sorted.sort(function(a,b){return b[1]-a[1]});
+  if(!sorted.length) return;
+
+  var labels=sorted.map(function(s){return s[0]});
+  var vals=sorted.map(function(s){return s[1]});
+  var colors=sorted.map(function(s){return VOW[s[0]]?'rgba(212,165,116,0.75)':'rgba(90,155,186,0.75)'});
+  var borderColors=sorted.map(function(s){return VOW[s[0]]?COL.a:COL.b});
+
+  destroyChart('chartPhoneme');
+  charts['chartPhoneme'] = new Chart($('chartPhoneme'), {
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[{
+        label:'Frequency',
+        data:vals,
+        backgroundColor:colors,
+        borderColor:borderColors,
+        borderWidth:1,
+        borderRadius:2
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true, aspectRatio:2,
+      scales:{
+        x:{ title:{ display:true, text:'Phoneme', color:COL.d }, grid:{ display:false } },
+        y:{ title:{ display:true, text:'Frequency', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' }, beginAtZero:true }
+      },
+      plugins:{
+        legend:{ display:true, labels:{ generateLabels:function(){
+          return [
+            {text:'Vowel', fillStyle:'rgba(212,165,116,0.75)', strokeStyle:COL.a, lineWidth:1, pointStyle:'rect'},
+            {text:'Consonant', fillStyle:'rgba(90,155,186,0.75)', strokeStyle:COL.b, lineWidth:1, pointStyle:'rect'}
+          ];
+        }}},
+        tooltip:{ callbacks:{ title:function(ctx){return 'Phoneme: '+ctx[0].label+(VOW[ctx[0].label]?' (vowel)':' (consonant)')} } }
+      }
+    }
+  });
+
+  // Radar chart: archetype phoneme profiles
+  var citizens=D.citizens_db||[];
+  var rolePhonemes={};
+  for(var rcid in lex) if(lex.hasOwnProperty(rcid)){
+    var citizen=null;
+    for(var ci=0;ci<citizens.length;ci++) if(citizens[ci].id===rcid){citizen=citizens[ci];break}
+    var role=citizen?citizen.role:'unknown';
+    if(!rolePhonemes[role]) rolePhonemes[role]={};
+    for(var ri=0;ri<lex[rcid].length;ri++){
+      var rs=(lex[rcid][ri].sound||'').toLowerCase().replace(/[^a-z]/g,'');
+      for(var rj=0;rj<rs.length;rj++) rolePhonemes[role][rs[rj]]=(rolePhonemes[role][rs[rj]]||0)+1;
+    }
+  }
+
+  var roles=Object.keys(rolePhonemes);
+  if(roles.length >= 2 && sorted.length >= 4){
+    var topPhonemes=sorted.slice(0,10).map(function(s){return s[0]});
+    var radarColors=[COL.a,COL.g,COL.b,COL.r,'#9a6ec4','#c4a06e'];
+    var radarDatasets=roles.map(function(role,idx){
+      var total=0; for(var pk in rolePhonemes[role]) total+=rolePhonemes[role][pk];
+      var data=topPhonemes.map(function(p){return total>0?((rolePhonemes[role][p]||0)/total*100):0});
+      return {
+        label:role,
+        data:data,
+        borderColor:radarColors[idx%radarColors.length],
+        backgroundColor:radarColors[idx%radarColors.length].replace(')',',0.1)').replace('rgb','rgba'),
+        borderWidth:2,
+        pointRadius:3,
+        pointBackgroundColor:radarColors[idx%radarColors.length]
+      };
+    });
+
+    destroyChart('chartPhonemeRadar');
+    charts['chartPhonemeRadar'] = new Chart($('chartPhonemeRadar'), {
+      type:'radar',
+      data:{ labels:topPhonemes, datasets:radarDatasets },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:1.5,
+        scales:{
+          r:{
+            angleLines:{ color:'rgba(255,255,255,0.05)' },
+            grid:{ color:'rgba(255,255,255,0.05)' },
+            pointLabels:{ color:COL.d, font:{size:11} },
+            ticks:{ display:false },
+            beginAtZero:true
+          }
+        },
+        plugins:{ legend:{ position:'bottom', labels:{font:{size:10},padding:12} } }
+      }
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════
+   09 COMMUNICATION EFFICIENCY
+   ═══════════════════════════════════════════ */
+function rEfficiency(){
+  var eff=(D.science||{}).efficiency||{};
+  var srData=eff.success_rate_over_time||[];
+  var alData=eff.avg_length_over_time||[];
+
+  if(srData.length > 1 || alData.length > 1){
+    var useData = srData.length > 1 ? srData : alData;
+    var labels=useData.map(function(d){return d.tick_bucket});
+    var srVals=srData.map(function(d){return d.success_rate});
+    var alVals=alData.map(function(d){return d.avg_utterance_length});
+
+    var datasets=[];
+    if(srVals.length) datasets.push({ label:'Success Rate', data:srVals, borderColor:COL.g, backgroundColor:'rgba(74,158,110,0.08)', borderWidth:2, pointRadius:2, fill:true, tension:0.3, yAxisID:'y' });
+    if(alVals.length) datasets.push({ label:'Avg Utterance Length', data:alVals, borderColor:COL.b, borderWidth:2, pointRadius:2, fill:false, tension:0.3, yAxisID:'y1' });
+
+    destroyChart('chartEfficiency');
+    charts['chartEfficiency'] = new Chart($('chartEfficiency'), {
+      type:'line',
+      data:{ labels:labels, datasets:datasets },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:2,
+        interaction:{ mode:'index', intersect:false },
+        scales:{
+          x:{ title:{ display:true, text:'Tick Bucket', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' } },
+          y:{ type:'linear', position:'left', title:{ display:true, text:'Success Rate', color:COL.g }, grid:{ color:'rgba(255,255,255,0.03)' }, ticks:{color:COL.g}, min:0, max:1 },
+          y1:{ type:'linear', position:'right', title:{ display:true, text:'Avg Length', color:COL.b }, grid:{ drawOnChartArea:false }, ticks:{color:COL.b} }
+        }
+      }
+    });
+  }
+
+  // Context type doughnut from recent_utterances
+  var utts=D.recent_utterances||[];
+  var ctxTypes={};
+  for(var i=0;i<utts.length;i++){
+    var ct=utts[i].context_type||'unknown';
+    ctxTypes[ct]=(ctxTypes[ct]||0)+1;
+  }
+  var ctxKeys=Object.keys(ctxTypes);
+  if(ctxKeys.length){
+    var ctxColors=['rgba(212,165,116,0.8)','rgba(74,158,110,0.8)','rgba(90,155,186,0.8)','rgba(196,74,32,0.8)','rgba(154,110,196,0.8)','rgba(196,160,110,0.8)'];
+    destroyChart('chartContextTypes');
+    charts['chartContextTypes'] = new Chart($('chartContextTypes'), {
+      type:'doughnut',
+      data:{
+        labels:ctxKeys,
+        datasets:[{
+          data:ctxKeys.map(function(k){return ctxTypes[k]}),
+          backgroundColor:ctxKeys.map(function(_,i){return ctxColors[i%ctxColors.length]}),
+          borderColor:'rgba(10,10,15,0.5)',
+          borderWidth:2
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:1.2,
+        cutout:'50%',
+        plugins:{
+          legend:{ position:'bottom', labels:{font:{size:10},padding:10} },
+          tooltip:{ callbacks:{ label:function(ctx){ return ctx.label+': '+ctx.parsed+' utterances' } } }
+        }
+      }
+    });
+  }
+
+  // Stats summary
+  var us=D.utterance_stats||{};
+  var statsEl=$('efficiencyStats');
+  if(statsEl){
+    statsEl.innerHTML='';
+    var sw=document.createElement('div'); sw.className='chart-wrap';
+    sw.innerHTML='<div class="chart-title">Communication Summary</div>'+
+      '<div style="font-family:var(--mono);font-size:.78rem;line-height:2.2">'+
+      '<div>Total Utterances: <span style="color:var(--amber);font-weight:700">'+fmt(us.total_utterances)+'</span></div>'+
+      '<div>Successful: <span style="color:var(--green);font-weight:700">'+fmt(us.successful)+'</span></div>'+
+      '<div>Active Speakers: <span style="color:var(--blue);font-weight:700">'+(us.active_speakers||'--')+'</span></div>'+
+      '<div>Recent Utterances: <span style="color:var(--text)">'+utts.length+'</span></div>'+
+      '</div>';
+    statsEl.appendChild(sw);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   10 SOCIAL NETWORK
+   ═══════════════════════════════════════════ */
+function rSocial(){
+  var rels=D.relationships||[], tc={};
+  for(var i=0;i<rels.length;i++) tc[rels[i].type||'unknown']=(tc[rels[i].type||'unknown']||0)+1;
+  var types=Object.keys(tc);
+
+  // Relationship type doughnut
+  if(types.length){
+    var relColors=['rgba(212,165,116,0.8)','rgba(74,158,110,0.8)','rgba(90,155,186,0.8)','rgba(196,74,32,0.8)','rgba(154,110,196,0.8)','rgba(196,160,110,0.8)'];
+    destroyChart('chartRelTypes');
+    charts['chartRelTypes'] = new Chart($('chartRelTypes'), {
+      type:'doughnut',
+      data:{
+        labels:types,
+        datasets:[{
+          data:types.map(function(t){return tc[t]}),
+          backgroundColor:types.map(function(_,i){return relColors[i%relColors.length]}),
+          borderColor:'rgba(10,10,15,0.5)',
+          borderWidth:2
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:1.2,
+        cutout:'45%',
+        plugins:{
+          legend:{ position:'bottom', labels:{font:{size:10},padding:10} },
+          tooltip:{ callbacks:{ label:function(ctx){ return ctx.label+': '+ctx.parsed+' relationships' } } }
+        }
+      }
+    });
+  }
+
+  // Relationship score histogram
+  if(rels.length){
+    var bins=10, binW=2.0/bins; // -1 to 1
+    var binLabels=[], binCounts=[];
+    for(var bi=0;bi<bins;bi++){
+      var lo=-1+bi*binW, hi=lo+binW;
+      binLabels.push(lo.toFixed(1)+' to '+hi.toFixed(1));
+      binCounts.push(0);
+    }
+    for(var ri2=0;ri2<rels.length;ri2++){
+      var sc=Math.max(-1,Math.min(1,rels[ri2].score||0));
+      var idx=Math.min(bins-1,Math.floor((sc+1)/binW));
+      binCounts[idx]++;
+    }
+    var histColors=binLabels.map(function(_,i){
+      var v=-1+i*binW+binW/2;
+      if(v<-0.3) return 'rgba(196,74,32,0.7)';
+      if(v>0.3) return 'rgba(74,158,110,0.7)';
+      return 'rgba(112,106,94,0.5)';
+    });
+
+    destroyChart('chartRelHist');
+    charts['chartRelHist'] = new Chart($('chartRelHist'), {
+      type:'bar',
+      data:{
+        labels:binLabels,
+        datasets:[{ label:'Relationships', data:binCounts, backgroundColor:histColors, borderColor:histColors.map(function(c){return c.replace('0.7','1').replace('0.5','0.8')}), borderWidth:1, borderRadius:2 }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:1.2,
+        scales:{
+          x:{ title:{ display:true, text:'Score Range', color:COL.d }, grid:{ display:false }, ticks:{font:{size:8},maxRotation:45} },
+          y:{ title:{ display:true, text:'Count', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' }, beginAtZero:true }
+        },
+        plugins:{ legend:{display:false} }
+      }
+    });
+  }
+
+  // Strongest bonds
+  var sorted=rels.slice().sort(function(a,b){return b.score-a.score});
+  var bondsEl=$('strongBonds'); bondsEl.innerHTML='';
+  var bw=document.createElement('div'); bw.className='chart-wrap';
+  var bt=document.createElement('div'); bt.className='chart-title'; bt.textContent='Strongest Bonds'; bw.appendChild(bt);
+  for(var bdi=0;bdi<Math.min(5,sorted.length);bdi++){
+    var bd=document.createElement('div');
+    bd.style.cssText='font-family:var(--mono);font-size:.72rem;padding:4px 0;color:var(--green)';
+    bd.textContent=cn(sorted[bdi].citizen_a)+' \u2194 '+cn(sorted[bdi].citizen_b)+': '+f2(sorted[bdi].score)+' ('+sorted[bdi].type+')';
+    bw.appendChild(bd);
+  }
+  bondsEl.appendChild(bw);
+
+  // Strongest rivalries
+  var rv=sorted.slice().reverse();
+  var rivEl=$('strongRivalries'); rivEl.innerHTML='';
+  if(rv.length && rv[0].score < 0){
+    var rw=document.createElement('div'); rw.className='chart-wrap';
+    var rt=document.createElement('div'); rt.className='chart-title'; rt.textContent='Strongest Rivalries'; rw.appendChild(rt);
+    for(var rvi=0;rvi<Math.min(5,rv.length);rvi++){
+      if(rv[rvi].score >= 0) break;
+      var rd=document.createElement('div');
+      rd.style.cssText='font-family:var(--mono);font-size:.72rem;padding:4px 0;color:var(--red)';
+      rd.textContent=cn(rv[rvi].citizen_a)+' \u2194 '+cn(rv[rvi].citizen_b)+': '+f2(rv[rvi].score)+' ('+rv[rvi].type+')';
+      rw.appendChild(rd);
+    }
+    rivEl.appendChild(rw);
+  }
+
+  // Relationship table
+  var relRows=rels.map(function(r){return[cn(r.citizen_a),cn(r.citizen_b),parseFloat(f2(r.score)),r.type||'--']});
+  var relTbl=BT($('relTableWrap'),['Citizen A','Citizen B','Score','Type'],relRows,{mx:200});
+  $('relSearch').oninput=function(e){var q=e.target.value.toLowerCase();relTbl.sf(q?function(r){return(r[0]+'|'+r[1]+'|'+r[3]).toLowerCase().indexOf(q)>=0}:null)};
+}
+
+/* ═══════════════════════════════════════════
+   11 SURVIVAL & POPULATION
+   ═══════════════════════════════════════════ */
+function rSurvival(){
+  var deaths=D.deaths||[], cc={}, ages=[];
+  for(var i=0;i<deaths.length;i++){
+    cc[deaths[i].cause||'unknown']=(cc[deaths[i].cause||'unknown']||0)+1;
+    if(deaths[i].age!=null) ages.push(deaths[i].age);
+  }
+
+  // Death causes - horizontal bar
+  var causes=[]; for(var k in cc) if(cc.hasOwnProperty(k)) causes.push([k,cc[k]]);
+  causes.sort(function(a,b){return b[1]-a[1]});
+
+  if(causes.length){
+    destroyChart('chartDeathCause');
+    charts['chartDeathCause'] = new Chart($('chartDeathCause'), {
+      type:'bar',
+      data:{
+        labels:causes.map(function(c){return c[0]}),
+        datasets:[{ label:'Deaths', data:causes.map(function(c){return c[1]}), backgroundColor:'rgba(196,74,32,0.7)', borderColor:COL.r, borderWidth:1, borderRadius:3 }]
+      },
+      options:{
+        indexAxis:'horizontal',
+        responsive:true, maintainAspectRatio:true, aspectRatio:1.3,
+        scales:{
+          x:{ title:{ display:true, text:'Deaths', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' }, beginAtZero:true },
+          y:{ grid:{ display:false } }
+        },
+        plugins:{ legend:{display:false} }
+      }
+    });
+  }
+
+  // Age at death distribution
+  if(ages.length){
+    var maxAge=Math.max.apply(null,ages), nb=Math.min(8,maxAge+1), bs=Math.ceil((maxAge+1)/nb);
+    var ageBins=[], ageLabels=[];
+    for(var b=0;b<nb;b++){ ageBins.push(0); ageLabels.push(b*bs+'-'+((b+1)*bs-1)) }
+    for(var ai=0;ai<ages.length;ai++){ var idx=Math.min(nb-1,Math.floor(ages[ai]/bs)); ageBins[idx]++ }
+
+    destroyChart('chartDeathAge');
+    charts['chartDeathAge'] = new Chart($('chartDeathAge'), {
+      type:'bar',
+      data:{
+        labels:ageLabels,
+        datasets:[{ label:'Deaths', data:ageBins, backgroundColor:'rgba(212,165,116,0.65)', borderColor:COL.a, borderWidth:1, borderRadius:3 }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:1.3,
+        scales:{
+          x:{ title:{ display:true, text:'Age Range', color:COL.d }, grid:{ display:false } },
+          y:{ title:{ display:true, text:'Deaths', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' }, beginAtZero:true }
+        },
+        plugins:{ legend:{display:false} }
+      }
+    });
+  }
+
+  // Population over time
+  var snaps=D.snapshots||[];
+  if(snaps.length > 1){
+    var popLabels=snaps.map(function(s){return s.tick});
+    var popData=snaps.map(function(s){return s.alive_count||0});
+
+    destroyChart('chartPopulation');
+    var popEl=$('chartPopulation');
+    var popCtx=popEl.getContext('2d');
+    var popGrad=popCtx.createLinearGradient(0,0,0,250);
+    popGrad.addColorStop(0,'rgba(74,158,110,0.2)');
+    popGrad.addColorStop(1,'rgba(74,158,110,0.01)');
+
+    charts['chartPopulation'] = new Chart(popEl, {
+      type:'line',
+      data:{
+        labels:popLabels,
+        datasets:[{
+          label:'Alive Citizens',
+          data:popData,
+          borderColor:COL.g,
+          backgroundColor:popGrad,
+          borderWidth:2,
+          pointRadius:1.5,
+          fill:true,
+          tension:0.3
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:2.5,
+        scales:{
+          x:{ title:{ display:true, text:'Tick', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' } },
+          y:{ title:{ display:true, text:'Population', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' }, beginAtZero:true }
+        }
+      }
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════
+   12 WORLD HISTORY
+   ═══════════════════════════════════════════ */
+function rWorlds(){
+  var worlds=D.worlds||[];
+
+  if(worlds.length){
+    var wLabels=worlds.map(function(w){return 'W'+w.world_id});
+    destroyChart('chartWorlds');
+    charts['chartWorlds'] = new Chart($('chartWorlds'), {
+      type:'bar',
+      data:{
+        labels:wLabels,
+        datasets:[
+          { label:'Ticks', data:worlds.map(function(w){return w.ticks||0}), backgroundColor:'rgba(212,165,116,0.7)', borderColor:COL.a, borderWidth:1, borderRadius:3 },
+          { label:'Interactions', data:worlds.map(function(w){return w.interactions||0}), backgroundColor:'rgba(90,155,186,0.7)', borderColor:COL.b, borderWidth:1, borderRadius:3 },
+          { label:'Shared Words', data:worlds.map(function(w){return w.shared_words||0}), backgroundColor:'rgba(74,158,110,0.7)', borderColor:COL.g, borderWidth:1, borderRadius:3 }
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true, aspectRatio:2,
+        scales:{
+          x:{ grid:{ display:false } },
+          y:{ grid:{ color:'rgba(255,255,255,0.03)' }, beginAtZero:true }
+        },
+        plugins:{ legend:{ position:'top', labels:{font:{size:10},padding:12} } }
+      }
+    });
+  }
+
+  // Milestones
+  var ml=D.milestones||[];
+  if(ml.length){
+    var mel=$('milestoneList'); mel.innerHTML='';
+    var mTitle=document.createElement('div'); mTitle.style.cssText='font-family:var(--mono);font-size:.65rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin:20px 0 12px';
+    mTitle.textContent='Milestones Timeline'; mel.appendChild(mTitle);
+    for(var mi=0;mi<ml.length;mi++){
+      var card=document.createElement('div'); card.className='cascade-card';
+      card.style.borderLeftColor=COL.g;
+      card.innerHTML='<span style="font-family:var(--mono);font-size:.7rem;color:var(--green);font-weight:700">Tick '+ml[mi].tick+'</span>'+
+        '<span style="font-family:var(--mono);font-size:.85rem;color:var(--amber);font-weight:700;margin-left:12px">'+E(ml[mi].milestone||'')+'</span>'+
+        '<div style="font-size:.82rem;color:var(--dim);margin-top:6px;line-height:1.6;font-family:var(--serif)">'+E(ml[mi].description||'')+'</div>';
+      mel.appendChild(card);
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════
+   13 TRAINING HISTORY
+   ═══════════════════════════════════════════ */
+function rTraining(){
+  var runs=D.training_runs||[];
+  if(!runs.length){
+    $('trainingTableWrap').innerHTML='<p style="font-family:var(--mono);font-size:.75rem;color:var(--muted);padding:20px">No training data yet.</p>';
+    return;
+  }
+
+  var rows=runs.map(function(r){return[cn(r.citizen_id),r.version||'--',r.base_examples||0,r.real_examples||0,r.vocab_reinforcement||0,r.gesture_grounding||0,r.total_examples||0,r.since_tick||'--',r.through_tick||'--']});
+  BT($('trainingTableWrap'),['Citizen','Ver','Base','Real','Vocab','Gesture','Total','Since','Through'],rows);
+
+  var labels=runs.map(function(r){
+    var nm=cn(r.citizen_id);
+    return (nm.length>8?nm.substring(0,7)+'..':nm)+'v'+(r.version||'');
+  });
+
+  var cats=[
+    {k:'base_examples',c:'rgba(58,54,64,0.7)',bc:COL.m,l:'Base'},
+    {k:'real_examples',c:'rgba(212,165,116,0.7)',bc:COL.a,l:'Real'},
+    {k:'vocab_reinforcement',c:'rgba(74,158,110,0.7)',bc:COL.g,l:'Vocab'},
+    {k:'gesture_grounding',c:'rgba(90,155,186,0.7)',bc:COL.b,l:'Gesture'}
+  ];
+
+  var datasets=cats.map(function(cat){
+    return {
+      label:cat.l,
+      data:runs.map(function(r){return r[cat.k]||0}),
+      backgroundColor:cat.c,
+      borderColor:cat.bc,
+      borderWidth:1,
+      borderRadius:2
+    };
+  });
+
+  destroyChart('chartTraining');
+  charts['chartTraining'] = new Chart($('chartTraining'), {
+    type:'bar',
+    data:{ labels:labels, datasets:datasets },
+    options:{
+      responsive:true, maintainAspectRatio:true, aspectRatio:2,
+      scales:{
+        x:{ stacked:true, grid:{ display:false }, ticks:{font:{size:9},maxRotation:45} },
+        y:{ stacked:true, title:{ display:true, text:'Examples', color:COL.d }, grid:{ color:'rgba(255,255,255,0.03)' }, beginAtZero:true }
+      },
+      plugins:{ legend:{ position:'top', labels:{font:{size:10},padding:12} } }
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════
+   16 EXPORTS
+   ═══════════════════════════════════════════ */
+function rExports(){
+  $('dlSharedLex').onclick=function(){
+    var r=(D.shared_lexicon||[]).map(function(s){return[s.sound,s.meaning,s.confidence,s.citizen_count,s.tick_established,(s.established_by||[]).join(';')]});
+    dlCSV('wildmind_shared_lexicon.csv',['sound','meaning','confidence','citizen_count','tick_established','established_by'],r);
+  };
+  $('dlFullLex').onclick=function(){
+    var r=[],l=D.lexicon_by_citizen||{};
+    for(var c in l) if(l.hasOwnProperty(c)) for(var i=0;i<l[c].length;i++){var e=l[c][i];r.push([c,cn(c),e.sound,e.meaning,e.confidence,e.times_used,e.tick_learned])}
+    dlCSV('wildmind_full_lexicon.csv',['id','name','sound','meaning','confidence','times_used','tick_learned'],r);
+  };
+  $('dlCitizens').onclick=function(){
+    var r=(D.citizens_db||[]).map(function(c){return[c.id,c.name,c.role,c.age,c.sex,c.mood,c.energy,c.status,c.alive,c.x,c.y]});
+    dlCSV('wildmind_citizens.csv',['id','name','role','age','sex','mood','energy','status','alive','x','y'],r);
+  };
+  $('dlScience').onclick=function(){ dlJSON('wildmind_science.json',D.science||{}) };
+  $('dlRelationships').onclick=function(){
+    var r=(D.relationships||[]).map(function(r){return[r.citizen_a,cn(r.citizen_a),r.citizen_b,cn(r.citizen_b),r.score,r.type]});
+    dlCSV('wildmind_relationships.csv',['a_id','a_name','b_id','b_name','score','type'],r);
+  };
+  $('dlSnapshots').onclick=function(){
+    var r=(D.snapshots||[]).map(function(s){return[s.tick,s.day,s.season,s.alive_count,s.shared_vocab_size,s.total_interactions,s.communication_success_rate,s.stage]});
+    dlCSV('wildmind_snapshots.csv',['tick','day','season','alive','vocab','interactions','success_rate','stage'],r);
+  };
+}
+
+/* ═══════════════════════════════════════════
+   SCROLL-SPY
+   ═══════════════════════════════════════════ */
+function initSpy(){
+  var secs=document.querySelectorAll('.section'), links=document.querySelectorAll('.sidebar a[data-section]');
+  var obs=new IntersectionObserver(function(es){
+    for(var i=0;i<es.length;i++) if(es[i].isIntersecting){
+      for(var j=0;j<links.length;j++) links[j].classList.remove('active');
+      var m=document.querySelector('.sidebar a[data-section="'+es[i].target.id+'"]');
+      if(m) m.classList.add('active');
+    }
+  },{rootMargin:'-20% 0px -70% 0px'});
+  for(var k=0;k<secs.length;k++) obs.observe(secs[k]);
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE TOGGLE
+   ═══════════════════════════════════════════ */
+function initMob(){
+  $('mobileToggle').onclick=function(){ $('sidebar').classList.toggle('open') };
+  var links=$('sidebar').querySelectorAll('a');
+  for(var i=0;i<links.length;i++) links[i].addEventListener('click',function(){ $('sidebar').classList.remove('open') });
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',function(){ initSpy(); initMob(); load() });
+
+})();
+</script>
+</body>
+</html>

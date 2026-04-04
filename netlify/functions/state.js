@@ -23,6 +23,12 @@ async function getClient() {
   return cachedClient;
 }
 
+function safeJSON(val, fallback = null) {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val !== "string") return val;
+  try { return JSON.parse(val); } catch (_) { return fallback; }
+}
+
 exports.handler = async (event) => {
   const headers = {
     "Content-Type": "application/json",
@@ -35,11 +41,14 @@ exports.handler = async (event) => {
     return { statusCode: 204, headers, body: "" };
   }
 
-  // API key authentication
+  // API key authentication (constant-time comparison prevents timing attacks)
   const apiKey = process.env.WILDMIND_API_KEY;
   if (apiKey) {
-    const provided = event.headers["x-api-key"] || event.queryStringParameters?.key;
-    if (provided !== apiKey) {
+    const provided = event.headers["x-api-key"] || "";
+    const crypto = require("crypto");
+    const valid = provided.length === apiKey.length &&
+      crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(apiKey));
+    if (!valid) {
       return { statusCode: 401, headers, body: JSON.stringify({ error: "Unauthorized" }) };
     }
   }
@@ -106,13 +115,28 @@ exports.handler = async (event) => {
       q("training_runs", "SELECT citizen_id, version, base_examples, real_examples, vocab_reinforcement_examples, gesture_grounding_examples, total_examples, since_tick, through_tick, timestamp FROM additive_training_runs ORDER BY timestamp ASC LIMIT 500"),
     ]);
 
-    const [climateRes, floraRes, faunaRes, deathsRes, voiceClipsRes, faunaEventsRes] = await Promise.all([
+    const [climateRes, floraRes, faunaRes, deathsRes, voiceClipsRes, faunaEventsRes, benchmarksRes, decisionsRes] = await Promise.all([
       q("climate", "SELECT tick, season, temperature_avg, rainfall, wind_speed, humidity, extreme_event FROM climate_state ORDER BY id DESC LIMIT 1"),
       q("flora", "SELECT tick, total_food, plant_counts, depleted_cells FROM flora_state ORDER BY id DESC LIMIT 1"),
       q("fauna", "SELECT tick, species_counts, predator_positions, prey_positions, recent_hunts, recent_attacks FROM fauna_state ORDER BY id DESC LIMIT 1"),
       q("deaths", "SELECT citizen_id, tick, cause, age FROM deaths ORDER BY tick DESC LIMIT 20"),
       q("voice_clips", "SELECT id, sound, meaning, citizen_id, tick, audio_format, length(audio_b64) > 0 AS has_audio FROM voice_clips ORDER BY id ASC LIMIT 500"),
       q("fauna_events", "SELECT tick, species_counts, recent_hunts, recent_attacks FROM fauna_state ORDER BY tick DESC LIMIT 50"),
+      q("benchmarks", "SELECT world_id, tick, score, stage, summary, results, timestamp FROM benchmark_results ORDER BY world_id ASC"),
+      q("decisions", `
+        SELECT
+          decision_type,
+          choice,
+          COUNT(*) as total,
+          SUM(CASE WHEN outcome = 'thrived' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(*),0) as thrive_rate,
+          SUM(CASE WHEN outcome = 'survived' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(*),0) as survive_rate,
+          SUM(CASE WHEN outcome = 'died' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(*),0) as death_rate,
+          AVG(pressure) as avg_pressure
+        FROM decision_log
+        GROUP BY decision_type, choice
+        ORDER BY total DESC
+        LIMIT 50
+      `),
     ]);
 
     // Parse live state
@@ -151,7 +175,7 @@ exports.handler = async (event) => {
       sound: r.sound,
       meaning: r.meaning,
       confidence: parseFloat(r.confidence),
-      established_by: typeof r.established_by === "string" ? JSON.parse(r.established_by) : (r.established_by || []),
+      established_by: safeJSON(r.established_by, []),
       citizen_count: r.citizen_count,
       tick_established: r.tick_established,
     }));
@@ -182,7 +206,7 @@ exports.handler = async (event) => {
       tick: r.tick,
       event_type: r.event_type,
       description: r.description,
-      affected_citizens: typeof r.affected_citizens === "string" ? JSON.parse(r.affected_citizens) : (r.affected_citizens || []),
+      affected_citizens: safeJSON(r.affected_citizens, []),
       timestamp: r.timestamp,
     }));
 
@@ -201,7 +225,7 @@ exports.handler = async (event) => {
       home_landmark: r.home_landmark,
       personality: r.personality,
       knowledge: r.knowledge,
-      parent_ids: typeof r.parent_ids === "string" ? JSON.parse(r.parent_ids) : (r.parent_ids || []),
+      parent_ids: safeJSON(r.parent_ids, []),
       birth_tick: r.birth_tick,
       alive: r.alive,
       active: r.active,
@@ -255,7 +279,7 @@ exports.handler = async (event) => {
       // Narratives — the story feed
       narratives: narrativesRes.rows.map((r) => ({
         id: r.id, tick: r.tick, type: r.type, text: r.text,
-        citizens: typeof r.citizens === "string" ? JSON.parse(r.citizens) : (r.citizens || []),
+        citizens: safeJSON(r.citizens, []),
         drama_score: parseFloat(r.drama_score || 0),
         timestamp: r.timestamp,
       })),
@@ -280,6 +304,8 @@ exports.handler = async (event) => {
       fauna: faunaRes.rows[0] || null,
       fauna_history: faunaEventsRes.rows || [],
       deaths: deathsRes.rows || [],
+      benchmarks: benchmarksRes.rows || [],
+      decision_summary: decisionsRes.rows || [],
       // Voice clips (metadata only — audio fetched separately via /api/audio)
       voice_clips: voiceClipsRes.rows || [],
       // Historical snapshots (for timeline browsing)
@@ -289,12 +315,12 @@ exports.handler = async (event) => {
         total_interactions: r.total_interactions,
         communication_success_rate: parseFloat(r.communication_success_rate || 0),
         stage: r.stage,
-        summary: typeof r.state_summary === "string" ? JSON.parse(r.state_summary) : (r.state_summary || {}),
+        summary: safeJSON(r.state_summary, {}),
         timestamp: r.timestamp,
       })),
       // Science metrics history (for trend charts)
       science_history: scienceHistoryRes.rows.map((r) => {
-        let m = typeof r.metrics === "string" ? JSON.parse(r.metrics) : r.metrics;
+        let m = safeJSON(r.metrics);
         if (!m) return { tick: r.tick, metrics: null };
         // Strip to only trend-relevant scalars for bandwidth efficiency
         return {
@@ -327,7 +353,7 @@ exports.handler = async (event) => {
     if (queryErrors.length > 0) {
       console.warn(`State response built with ${queryErrors.length} query error(s):`, queryErrors.map(e => e.query).join(", "));
     }
-    console.log(`State response built in ${Date.now() - t0}ms | queries: ${16 + 6} | errors: ${queryErrors.length}`);
+    console.log(`State response built in ${Date.now() - t0}ms | queries: ${16 + 8} | errors: ${queryErrors.length}`);
 
     return {
       statusCode: 200,

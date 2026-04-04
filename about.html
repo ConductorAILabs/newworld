@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WildMind — If The World Ended, How Would We Start Again?</title>
+  <title>A New World — If The World Ended, How Would We Start Again?</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23d4a574'/></svg>">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,300;1,8..60,400;1,8..60,600&display=swap" rel="stylesheet">
   <style>
@@ -119,12 +119,14 @@
 <body>
 
 <nav class="nav">
-  <a href="/" class="nav-logo"><span class="w">WILD</span><span class="m">MIND</span></a>
+  <a href="/" class="nav-logo"><span class="w">A NEW</span><span class="m"> WORLD</span></a>
   <div class="nav-links">
     <a href="/">Dashboard</a>
     <a href="/about.html" class="active">About</a>
     <a href="/worlds.html">Worlds</a>
     <a href="/insights.html">Research</a>
+    <a href="/howitworks.html">How It Works</a>
+    <a href="/guide.html">Guide</a>
     <a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener" class="support">Support</a>
   </div>
 </nav>
@@ -134,7 +136,7 @@
   <canvas id="heroCanvas"></canvas>
   <div class="hero-fade"></div>
   <div class="hero-inner">
-    <div class="hero-label">WildMind · A World Rebirth Simulator</div>
+    <div class="hero-label">A New World · A World Rebirth Simulator</div>
     <h1>If the world ended,<br>how would we <em>start again?</em></h1>
     <p class="hero-sub">Thirty AI minds. No language. No culture. No history. Just survival instincts and each other. Watch what they build from nothing — and listen to the first words of a new civilization.</p>
     <div style="display:flex;gap:16px;margin-top:32px;flex-wrap:wrap">
@@ -338,7 +340,7 @@
 </section>
 
 <footer class="foot">
-  <div class="foot-logo"><span class="w">WILD</span><span class="m">MIND</span></div>
+  <div class="foot-logo"><span class="w">A NEW</span><span class="m"> WORLD</span></div>
   <div class="foot-text"><a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener">Support this project</a></div>
 </footer>
 
@@ -365,7 +367,7 @@
     ctx.strokeStyle='rgba(74,158,110,.4)';ctx.setLineDash([4,4]);ctx.beginPath();
     for(let i=0;i<w;i++){const x=i;const y=h-10-(h-20)*Math.pow(1-(i/w),1);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.stroke();ctx.setLineDash([]);
     ctx.fillStyle='var(--dim)';ctx.font='9px JetBrains Mono';ctx.fillText('Frequency',4,14);ctx.fillText('Rank \u2192',w-40,h-4);
-    ctx.fillStyle='#d4a574';ctx.fillText('WildMind',4,28);ctx.fillStyle='rgba(74,158,110,.7)';ctx.fillText('Natural language target',4,40);
+    ctx.fillStyle='#d4a574';ctx.fillText('A New World',4,28);ctx.fillStyle='rgba(74,158,110,.7)';ctx.fillText('Natural language target',4,40);
   });
 
   // Danger vs social vocab
@@ -397,5 +399,14 @@
   document.querySelectorAll('.citizen-example').forEach(el=>barObs.observe(el));
 })();
 </script>
+
+  <!-- Conductor AI Labs badge -->
+  <div class="conductor-badge">
+    <a href="https://conductorailabs.com/" target="_blank" rel="noopener noreferrer">
+      <span class="conductor-badge-dot"></span>
+      <span class="conductor-badge-text">A <strong>Conductor AI Labs</strong> experiment</span>
+    </a>
+  </div>
+
 </body>
 </html>

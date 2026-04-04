@@ -1,5 +1,5 @@
 /* ============================================================
-   WildMind Dashboard v2 — Tabbed Interface Application
+   A New World Dashboard v2 — Tabbed Interface Application
    Polls /api/state every 5 seconds and renders all panels.
    All DOM construction uses textContent or createElement.
    ============================================================ */
@@ -45,6 +45,8 @@
   var pollCount = 0;
   var lastPollMs = 0;
   var errorCounts = {};
+  var _prevSharedLexicon = [];
+  var _prevDeaths = [];
 
   function log(level, tag, msg, data) {
     if (level < currentLogLevel) return;
@@ -242,7 +244,7 @@
   window.setMapView = function(view) {
     mapView = view;
     // Update button states
-    ["terrain", "social", "resources", "danger"].forEach(function(v) {
+    ["terrain", "social", "resources", "danger", "language"].forEach(function(v) {
       var btn = byId("view-" + v);
       if (btn) btn.classList.toggle("active", v === view);
     });
@@ -252,9 +254,11 @@
     } else if (view === "social") {
       mapLayers.labels = true; mapLayers.animals = false; mapLayers.speech = true;
     } else if (view === "resources") {
-      mapLayers.labels = true; mapLayers.animals = false; mapLayers.speech = false;
+      mapLayers.labels = true; mapLayers.animals = true; mapLayers.speech = false;
     } else if (view === "danger") {
       mapLayers.labels = false; mapLayers.animals = true; mapLayers.speech = false;
+    } else if (view === "language") {
+      mapLayers.labels = true; mapLayers.animals = false; mapLayers.speech = false;
     }
     // Update show toggles
     ["labels", "animals", "speech"].forEach(function(l) {
@@ -1135,7 +1139,7 @@
   // ---------------------------------------------------------------------------
 
   function init() {
-    log(LOG_LEVEL.INFO, "init", "WildMind Dashboard initializing...");
+    log(LOG_LEVEL.INFO, "init", "A New World Dashboard initializing...");
     var t0 = performance.now();
 
     var steps = [
@@ -1432,6 +1436,24 @@
       setConnected(true);
       hideError();
 
+      // On first successful poll, auto-center map on the tribe
+      if (pollCount === 1) {
+        var _canvas = byId("map-canvas");
+        if (_canvas) {
+          var _dpr = window.devicePixelRatio || 1;
+          var _cssW = _canvas.width / _dpr;
+          var _cssH = _canvas.height / _dpr;
+          var _baseScale = Math.max(_cssW / ENV_COLS, _cssH / ENV_ROWS);
+          // Center on fire_pit (25000, 20000) at zoom 4 so spread tribe is clearly visible
+          var _zoom = 4;
+          var _sx = (25000 / TILE_PX) * _baseScale * _zoom;
+          var _sy = (20000 / TILE_PX) * _baseScale * _zoom;
+          mapZoom = _zoom;
+          mapPanX = _cssW / 2 - _sx;
+          mapPanY = _cssH / 2 - _sy;
+        }
+      }
+
       safe("update", update);
 
       // Log every 10th poll at INFO level, every poll at DEBUG
@@ -1501,36 +1523,43 @@
     }
   }
 
-  var _lastSeenTick = -1;
-  var _tickFrozenPolls = 0;
-
   function setConnected(ok) {
     var dot = byId("status-dot");
     var label = byId("connection-label");
     if (dot) dot.classList.toggle("connected", ok);
 
-    // Detect frozen simulation (between worlds — evolving/training)
-    if (ok && state && state.live_state) {
-      var currentTick = state.live_state.tick || 0;
-      if (currentTick === _lastSeenTick) {
-        _tickFrozenPolls++;
-      } else {
-        _tickFrozenPolls = 0;
-        _lastSeenTick = currentTick;
-      }
+    if (!ok) {
+      showEvolvingOverlay(false);
+      if (dot) dot.classList.remove("evolving");
+      setText(label, "Disconnected");
+      return;
+    }
 
-      // If tick hasn't changed in 6+ polls (30s), show evolving state
-      if (_tickFrozenPolls >= 6) {
-        if (dot) { dot.classList.remove("connected"); dot.classList.add("evolving"); }
-        setText(label, "Evolving...");
-        showEvolvingOverlay(true);
-        return;
-      }
+    var ls = state && state.live_state;
+
+    // Show evolving overlay only when the simulation explicitly flags world_ended.
+    // Ticks take 400-600 seconds due to LLM inference — a frozen tick number
+    // is normal and must NOT trigger the overlay.
+    if (ls && ls.world_ended) {
+      if (dot) { dot.classList.remove("connected"); dot.classList.add("evolving"); }
+      setText(label, "Evolving...");
+      showEvolvingOverlay(true);
+      return;
+    }
+
+    // If the publisher's timestamp hasn't updated in >3 minutes, the sim is offline.
+    // The publisher writes every 5s when running, so 3 min = clearly dead.
+    var staleMs = ls && ls.timestamp ? (Date.now() - ls.timestamp * 1000) : 0;
+    if (staleMs > 180000) {
+      if (dot) { dot.classList.remove("connected"); dot.classList.remove("evolving"); }
+      setText(label, "Sim offline");
+      showEvolvingOverlay(false);
+      return;
     }
 
     showEvolvingOverlay(false);
     if (dot) dot.classList.remove("evolving");
-    setText(label, ok ? "Live" : "Disconnected");
+    setText(label, "Live");
   }
 
   function showEvolvingOverlay(show) {
@@ -2071,6 +2100,49 @@
       }
     }
 
+    // Resources view: draw food-zone overlay sampled from terrain grid
+    if (mapView === "resources" && terrainGrid) {
+      var step = 15; // sample every 15 tiles (~750 world units) for performance
+      var dotR = Math.max(2, (step * scale / TILE_PX) * 0.55);
+      for (var rr = 0; rr < ENV_ROWS; rr += step) {
+        for (var rc = 0; rc < ENV_COLS; rc += step) {
+          var tile = terrainGrid[rr][rc];
+          if (!tile) continue;
+          var tx = worldToScreenX(rc * TILE_PX + TILE_PX * step / 2);
+          var ty = worldToScreenY(rr * TILE_PX + TILE_PX * step / 2);
+          if (tx < -dotR * 2 || tx > cssW + dotR * 2 || ty < -dotR * 2 || ty > cssH + dotR * 2) continue;
+          if (tile.isWater) {
+            ctx.fillStyle = "rgba(80,160,220,0.25)";
+          } else if (tile.isWetland) {
+            ctx.fillStyle = "rgba(80,200,140,0.30)";
+          } else if (tile.isForest) {
+            ctx.fillStyle = "rgba(60,180,80,0.28)";
+          } else if (tile.isMeadow || tile.isTropical) {
+            ctx.fillStyle = "rgba(140,210,80,0.22)";
+          } else {
+            continue;
+          }
+          ctx.beginPath();
+          ctx.arc(tx, ty, dotR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      // Flora depletion indicator (top-left corner)
+      if (state && state.flora && state.flora.total_food != null) {
+        var totalFood = state.flora.total_food;
+        var depletedCells = state.flora.depleted_cells || 0;
+        ctx.fillStyle = "rgba(10,10,18,0.80)";
+        roundedRect(ctx, 8, 8, 170, 44, 4);
+        ctx.fill();
+        ctx.fillStyle = "#6bbd6b";
+        ctx.font = "bold 11px 'JetBrains Mono', monospace";
+        ctx.textAlign = "left";
+        ctx.fillText("Food supply: " + Math.round(totalFood).toLocaleString(), 16, 24);
+        ctx.fillStyle = depletedCells > 50 ? "#c44a20" : "#888";
+        ctx.fillText("Depleted zones: " + depletedCells, 16, 42);
+      }
+    }
+
     var citizens = getCitizens();
 
     // Speech connection lines
@@ -2117,12 +2189,45 @@
     var dotRadius = Math.max(2, Math.min(8, 4 * scale / baseScale));
     var nameFontSize = Math.max(7, Math.min(12, 9 * scale / baseScale));
 
+    // Build per-citizen word counts for language view
+    var _langWordCounts = {};
+    if (mapView === "language" && state) {
+      var _sharedLex = state.shared_lexicon || [];
+      var _lexByCit = state.lexicon_by_citizen || {};
+      var _sharedMeanings = {};
+      _sharedLex.forEach(function(w) { _sharedMeanings[w.sound] = true; });
+      getCitizens().forEach(function(cit) {
+        var cnt = 0;
+        // Count established_by entries
+        _sharedLex.forEach(function(w) {
+          if (w.established_by && Array.isArray(w.established_by) && w.established_by.indexOf(cit.id) !== -1) cnt++;
+        });
+        // Also count personal lexicon entries matching shared meanings
+        var personal = _lexByCit[cit.id] || [];
+        personal.forEach(function(v) { if (_sharedMeanings[v.sound]) cnt++; });
+        _langWordCounts[cit.id] = cnt;
+      });
+    }
+
+    function _langColor(wordCount) {
+      if (wordCount === 0) return { base: "#c44a20", glow: "rgba(196,74,32,0.4)" };
+      if (wordCount <= 2)  return { base: "#d48a34", glow: "rgba(212,138,52,0.4)" };
+      if (wordCount <= 5)  return { base: "#c4c44a", glow: "rgba(196,196,74,0.4)" };
+      if (wordCount <= 10) return { base: "#4a9e6e", glow: "rgba(74,158,110,0.4)" };
+      return { base: "#5a9bba", glow: "rgba(90,155,186,0.4)" };
+    }
+
     citizens.forEach(function (c) {
       var pos = citizenPositions[c.id];
       if (!pos) return;
       var px = worldToScreenX(pos.x);
       var py = worldToScreenY(pos.y);
-      var colors = CITIZEN_COLORS[c.sex] || CITIZEN_COLORS.male;
+      var colors;
+      if (mapView === "language") {
+        colors = _langColor(_langWordCounts[c.id] || 0);
+      } else {
+        colors = CITIZEN_COLORS[c.sex] || CITIZEN_COLORS.male;
+      }
       var energy = c.energy != null ? c.energy : 0.5;
       var radius = dotRadius + energy * Math.min(3, 2 * scale / baseScale);
 
@@ -2253,6 +2358,59 @@
 
       // Re-enable smoothing for non-pixel-art drawing
       ctx.imageSmoothingEnabled = true;
+    }
+
+    // Resources view legend (bottom-left)
+    if (mapView === "resources") {
+      var _resLegend = [
+        { label: "Water / Fish",    color: "rgba(80,160,220,0.7)" },
+        { label: "Wetland / Reeds", color: "rgba(80,200,140,0.7)" },
+        { label: "Forest / Berries",color: "rgba(60,180,80,0.7)"  },
+        { label: "Meadow / Seeds",  color: "rgba(140,210,80,0.7)" },
+        { label: "▲ Predator",      color: "rgba(196,74,32,0.9)"  },
+        { label: "● Prey",          color: "rgba(74,158,110,0.9)" },
+      ];
+      var _rlX = 10, _rlY = cssH - (_resLegend.length * 18) - 22;
+      ctx.fillStyle = "rgba(10,10,18,0.7)";
+      ctx.fillRect(_rlX - 4, _rlY - 14, 130, _resLegend.length * 18 + 22);
+      ctx.fillStyle = "rgba(232,220,200,0.7)";
+      ctx.font = "bold 9px 'JetBrains Mono', monospace";
+      ctx.textAlign = "left";
+      ctx.fillText("RESOURCES", _rlX, _rlY);
+      _resLegend.forEach(function(item, idx) {
+        var ly = _rlY + 12 + idx * 18;
+        ctx.fillStyle = item.color;
+        ctx.fillRect(_rlX, ly - 8, 10, 10);
+        ctx.fillStyle = "rgba(232,220,200,0.7)";
+        ctx.font = "9px 'Inter', sans-serif";
+        ctx.fillText(item.label, _rlX + 14, ly);
+      });
+    }
+
+    // Language view legend (bottom-left)
+    if (mapView === "language") {
+      var _langLegend = [
+        { label: "0 words",   color: "#c44a20" },
+        { label: "1-2 words", color: "#d48a34" },
+        { label: "3-5 words", color: "#c4c44a" },
+        { label: "6-10 words",color: "#4a9e6e" },
+        { label: "10+ words", color: "#5a9bba" },
+      ];
+      var _llX = 10, _llY = cssH - (_langLegend.length * 18) - 22;
+      ctx.fillStyle = "rgba(10,10,18,0.7)";
+      ctx.fillRect(_llX - 4, _llY - 14, 110, _langLegend.length * 18 + 22);
+      ctx.fillStyle = "rgba(232,220,200,0.7)";
+      ctx.font = "bold 9px 'JetBrains Mono', monospace";
+      ctx.textAlign = "left";
+      ctx.fillText("LANGUAGE", _llX, _llY);
+      _langLegend.forEach(function(item, idx) {
+        var ly = _llY + 12 + idx * 18;
+        ctx.fillStyle = item.color;
+        ctx.fillRect(_llX, ly - 8, 10, 10);
+        ctx.fillStyle = "rgba(232,220,200,0.7)";
+        ctx.font = "9px 'Inter', sans-serif";
+        ctx.fillText(item.label, _llX + 14, ly);
+      });
     }
 
     // --- Hover tooltip (drawn last, above everything, in CSS pixel space) ---
@@ -2853,15 +3011,21 @@
     // 1. Survival Radar
     safe("dashChart/survivalRadar", function() {
       var avgH = 0, avgT = 0, avgHe = 0, avgE = 0, avgM = 0, n = 0;
+      var hasHunger = false, hasThirst = false, hasHealth = false;
       citizens.forEach(function(c) {
-        if (c.hunger != null) avgH += parseFloat(c.hunger);
-        if (c.thirst != null) avgT += parseFloat(c.thirst);
-        if (c.health != null) avgHe += parseFloat(c.health);
+        if (c.hunger != null) { avgH += parseFloat(c.hunger); hasHunger = true; }
+        if (c.thirst != null) { avgT += parseFloat(c.thirst); hasThirst = true; }
+        if (c.health != null) { avgHe += parseFloat(c.health); hasHealth = true; }
         avgE += parseFloat(c.energy || 0.5);
         avgM += Math.max(0, parseFloat(c.mood || 0) + 1) / 2;
         n++;
       });
       if (n === 0) return;
+      // Fallback to tribe-level survival summary if per-citizen fields missing
+      var surv = (state.live_state || {}).survival || {};
+      if (!hasHunger) avgH = surv.avg_hunger != null ? surv.avg_hunger * n : 0.75 * n;
+      if (!hasThirst) avgT = surv.avg_thirst != null ? surv.avg_thirst * n : 0.75 * n;
+      if (!hasHealth) avgHe = surv.avg_health != null ? surv.avg_health * n : 0.9 * n;
       var vals = [avgH/n, avgT/n, avgHe/n, avgE/n, avgM/n];
 
       if (_chartInstances.survivalRadar) {
@@ -3235,7 +3399,38 @@
       newEntries.push({ type: ntype, tick: item.tick || 0, data: item, isNarrative: true });
     });
 
-    if (newEntries.length === 0) return;
+    // --- CHANGE 2: Detect new shared lexicon words (word births) ---
+    var _wordBirthCards = [];
+    var _currentLexSounds = (state.shared_lexicon || []).map(function(w) { return w.sound; });
+    var _prevSoundsSet = {};
+    _prevSharedLexicon.forEach(function(s) { _prevSoundsSet[s] = true; });
+    if (_prevSharedLexicon.length > 0) {
+      // Find genuinely new words
+      (state.shared_lexicon || []).forEach(function(w) {
+        if (!_prevSoundsSet[w.sound]) {
+          _wordBirthCards.push(w);
+        }
+      });
+    }
+    _prevSharedLexicon = _currentLexSounds.slice();
+
+    // --- CHANGE 5: Detect new deaths ---
+    var _deathCards = [];
+    var _currentDeathIds = (state.deaths || []).map(function(d) { return d.id || d.citizen_id; });
+    var _prevDeathsSet = {};
+    _prevDeaths.forEach(function(id) { _prevDeathsSet[id] = true; });
+    if (_prevDeaths.length > 0) {
+      (state.deaths || []).forEach(function(d) {
+        var did = d.id || d.citizen_id;
+        if (did && !_prevDeathsSet[did]) {
+          _deathCards.push(d);
+        }
+      });
+    }
+    _prevDeaths = _currentDeathIds.slice();
+
+    var hasNewContent = newEntries.length > 0 || _wordBirthCards.length > 0 || _deathCards.length > 0;
+    if (!hasNewContent) return;
 
     var loading = byId("feed-loading");
     if (loading) loading.style.display = "none";
@@ -3245,8 +3440,109 @@
 
     // Build DOM elements and PREPEND to feed (newest at top, no re-sorting existing)
     var fragment = document.createDocumentFragment();
-    newEntries.forEach(function (entry) {
-      var div = createEl("div", "feed-entry type-" + entry.type + " fresh");
+
+    // Word birth cards go first (most prominent)
+    _wordBirthCards.forEach(function(w) {
+      var ls = state.live_state || {};
+      var currentTick = ls.tick || 0;
+      var wbDiv = createEl("div", "feed-entry type-milestone fresh");
+      var card = createEl("div", "feed-word-birth");
+      card.appendChild(createEl("div", "feed-wb-eyebrow", "\u25CE NEW WORD BORN  \u00B7  Tick " + currentTick));
+      var sound = createEl("span", "feed-wb-sound", "\u201C" + w.sound + "\u201D");
+      card.appendChild(sound);
+      card.appendChild(createEl("div", "feed-wb-meaning", "= " + (w.meaning || "?").toUpperCase()));
+      var knownBy = w.citizen_count || (w.established_by ? w.established_by.length : 1);
+      var conf = w.confidence != null ? (w.confidence * 100).toFixed(0) + "%" : "?";
+      card.appendChild(createEl("div", "feed-wb-stats", "Known by " + knownBy + " citizen" + (knownBy !== 1 ? "s" : "") + " \u00B7 confidence " + (w.confidence != null ? w.confidence.toFixed(2) : "?")));
+      card.appendChild(createEl("div", "feed-wb-prose", "The tribe has named something."));
+      wbDiv.appendChild(card);
+      fragment.appendChild(wbDiv);
+    });
+
+    // Death cards
+    _deathCards.forEach(function(d) {
+      var ls = state.live_state || {};
+      var currentTick = ls.tick || 0;
+      var deathDiv = createEl("div", "feed-entry type-death fresh");
+      var card = createEl("div", "feed-death-card");
+
+      // Header
+      var dHeader = createEl("div", "feed-death-header");
+      var cross = createEl("span", "feed-death-cross", "\u2020");
+      dHeader.appendChild(cross);
+      dHeader.appendChild(document.createTextNode(findCitizenName(d.id || d.citizen_id) + "  \u00B7  " + (d.role || "citizen") + "  \u00B7  age " + (d.age || "?")));
+      card.appendChild(dHeader);
+
+      // Meta
+      var cause = d.cause || "unknown";
+      var worldId = (state.live_state || {}).world_id || "?";
+      card.appendChild(createEl("div", "feed-death-meta", "Cause: " + cause + "  \u00B7  Tick " + (d.tick || currentTick) + "\nSurvived " + (d.age || "?") + " ticks in World " + worldId));
+
+      // Legacy: words they taught that others still use
+      var legacyDiv = createEl("div", "feed-death-legacy");
+      var sharedLex = state.shared_lexicon || [];
+      var citizenId = d.id || d.citizen_id;
+      var taughtWords = sharedLex.filter(function(w) {
+        return w.established_by && Array.isArray(w.established_by) && w.established_by.indexOf(citizenId) !== -1;
+      });
+      if (taughtWords.length > 0) {
+        var lexByCit = state.lexicon_by_citizen || {};
+        var livingCitizens = getCitizens();
+        var taughtLine = document.createElement("div");
+        var firstWord = taughtWords[0];
+        var usersCount = 0;
+        livingCitizens.forEach(function(lc) {
+          var lv = lexByCit[lc.id] || [];
+          lv.forEach(function(v) { if (v.sound === firstWord.sound) usersCount++; });
+        });
+        var strong = createEl("strong", null, "\u201C" + firstWord.sound + "\u201D");
+        taughtLine.appendChild(document.createTextNode("Words they taught that live on: "));
+        taughtLine.appendChild(strong);
+        taughtLine.appendChild(document.createTextNode(" (" + usersCount + " citizen" + (usersCount !== 1 ? "s" : "") + " still use it)"));
+        legacyDiv.appendChild(taughtLine);
+      }
+
+      // Closest bond
+      var allRels = state.relationships || [];
+      var myRels = allRels.filter(function(r) { return r.citizen_a === citizenId || r.citizen_b === citizenId; });
+      myRels.sort(function(a, b) { return Math.abs(b.score) - Math.abs(a.score); });
+      if (myRels.length > 0) {
+        var top = myRels[0];
+        var otherId = top.citizen_a === citizenId ? top.citizen_b : top.citizen_a;
+        var bondLine = document.createElement("div");
+        var bondStrong = createEl("strong", null, findCitizenName(otherId));
+        bondLine.appendChild(document.createTextNode("Closest bond: "));
+        bondLine.appendChild(bondStrong);
+        bondLine.appendChild(document.createTextNode(" (" + (top.type || "neutral") + " \u00B7 " + top.score.toFixed(2) + ")"));
+        legacyDiv.appendChild(bondLine);
+      }
+
+      card.appendChild(legacyDiv);
+      deathDiv.appendChild(card);
+      fragment.appendChild(deathDiv);
+    });
+
+    // Change 6: Sort narratives by drama_score — top 3 high drama first, rest chronological
+    var narrativeEntries = newEntries.filter(function(e) { return e.isNarrative; });
+    var nonNarrativeEntries = newEntries.filter(function(e) { return !e.isNarrative; });
+    var topDrama = [], restNarratives = [];
+    if (narrativeEntries.length > 0) {
+      var sortedByDrama = narrativeEntries.slice().sort(function(a, b) {
+        return (b.data.drama_score || 0) - (a.data.drama_score || 0);
+      });
+      topDrama = sortedByDrama.slice(0, 3).filter(function(e) { return (e.data.drama_score || 0) > 0; });
+      var topDramaIds = {};
+      topDrama.forEach(function(e) { topDramaIds[e.data.id] = true; });
+      restNarratives = narrativeEntries.filter(function(e) { return !topDramaIds[e.data.id]; });
+    }
+    var orderedEntries = topDrama.concat(nonNarrativeEntries).concat(restNarratives);
+
+    orderedEntries.forEach(function (entry) {
+      var isHighDrama = entry.isNarrative && (entry.data.drama_score || 0) > 0 && topDrama.indexOf(entry) !== -1;
+      var divClass = "feed-entry type-" + entry.type + " fresh";
+      if (entry.isNarrative) divClass += " feed-item-narrative";
+      if (isHighDrama) divClass += " feed-narrative-high";
+      var div = createEl("div", divClass);
       if (feedFilter !== "all" && entry.type !== feedFilter) div.style.display = "none";
       var catLabels = { speech: "SPEECH", world: "EVENT", milestone: "MILESTONE", transfer: "LANGUAGE", attack: "DANGER", death: "DEATH", voice: "VOICE" };
       var catLabel = createSpan("feed-category cat-" + entry.type, catLabels[entry.type] || entry.type.toUpperCase());
@@ -3254,8 +3550,10 @@
       if (entry.isNarrative) {
         div.appendChild(createSpan("feed-tick", "T" + (entry.data.tick != null ? entry.data.tick : "?")));
         div.appendChild(document.createTextNode(" "));
-        var narText = createSpan("feed-narrative", entry.data.text || "");
-        narText.style.cssText = "font-style:italic;color:var(--text-secondary);font-size:0.8rem";
+        var narText = createSpan("feed-narrative feed-narrative-text", entry.data.text || "");
+        if (!isHighDrama) {
+          narText.style.cssText = "font-style:italic;color:var(--text-secondary);font-size:0.8rem";
+        }
         div.appendChild(narText);
       } else if (entry.type === "speech") {
         buildInteractionFeedEntry(div, entry.data);
@@ -3281,21 +3579,63 @@
   }
 
   function buildInteractionFeedEntry(container, item) {
-    container.appendChild(createSpan("feed-tick", "T" + item.tick));
-    container.appendChild(createSpan("feed-icon", ">"));
-    container.appendChild(createSpan("feed-citizens", findCitizenName(item.citizen_a) + " \u2192 " + findCitizenName(item.citizen_b)));
+    var card = createEl("div", "feed-interaction-card");
 
-    if (item.speech_a) {
-      container.appendChild(document.createElement("br"));
-      container.appendChild(buildClickableUtterance(item.speech_a));
-    }
-    if (item.speech_b) {
-      container.appendChild(document.createElement("br"));
-      container.appendChild(buildClickableUtterance(item.speech_b));
-    }
+    // Header row: names + tick
+    var header = createEl("div", "feed-ic-header");
+    var names = createEl("span", "feed-ic-names",
+      findCitizenName(item.citizen_a) + " \u2192 " + findCitizenName(item.citizen_b));
+    header.appendChild(names);
+    header.appendChild(createEl("span", "feed-ic-tick", "T" + item.tick));
+    card.appendChild(header);
+
+    // Relationship badge from summary if present
     if (item.summary) {
-      container.appendChild(createEl("div", "feed-summary", item.summary));
+      card.appendChild(createEl("div", "feed-ic-rel", item.summary));
     }
+
+    // Two-column speech area
+    var speeches = createEl("div", "feed-ic-speeches");
+    var speechA = createEl("div", "feed-ic-speech" + (item.speech_a ? "" : " empty"));
+    if (item.speech_a) {
+      speechA.appendChild(buildClickableUtterance(item.speech_a));
+    } else {
+      speechA.textContent = "silent";
+    }
+    var speechB = createEl("div", "feed-ic-speech" + (item.speech_b ? "" : " empty"));
+    if (item.speech_b) {
+      speechB.appendChild(buildClickableUtterance(item.speech_b));
+    } else {
+      speechB.textContent = "silent";
+    }
+    speeches.appendChild(speechA);
+    speeches.appendChild(speechB);
+    card.appendChild(speeches);
+
+    // Communication success bar
+    // Derive from utterance_stats if available, else estimate from speech presence
+    var successPct = 0;
+    if (item.communication_success != null) {
+      successPct = Math.round(item.communication_success * 100);
+    } else if (state && state.utterance_stats) {
+      var ustats = state.utterance_stats;
+      successPct = ustats.total_utterances > 0
+        ? Math.round((ustats.successful / ustats.total_utterances) * 100) : 0;
+    } else {
+      successPct = (item.speech_a && item.speech_b) ? 65 : item.speech_a ? 40 : 0;
+    }
+    var barColor = successPct >= 70 ? "#4a9e6e" : successPct >= 40 ? "#d4a574" : "#c44a20";
+    var successRow = createEl("div", "feed-ic-success-row");
+    var track = createEl("div", "feed-ic-bar-track");
+    var fill = createEl("div", "feed-ic-bar-fill");
+    fill.style.width = successPct + "%";
+    fill.style.background = barColor;
+    track.appendChild(fill);
+    successRow.appendChild(track);
+    successRow.appendChild(createEl("span", "feed-ic-pct", successPct + "% understood"));
+    card.appendChild(successRow);
+
+    container.appendChild(card);
   }
 
   // Build a feed utterance span with clickable words that have audio
@@ -3478,6 +3818,41 @@
     }
 
     statusPanel.appendChild(bars);
+
+    // Change 7: Character dossier / bio line
+    safe("citizen/bio", function() {
+      var bioDiv = createEl("div", "citizen-bio");
+      var survivalTick = c.age || 0;
+      var myRelsAll = (state.relationships || []).filter(function(r) { return r.citizen_a === c.id || r.citizen_b === c.id; });
+      var wordsKnown = ((state.lexicon_by_citizen && state.lexicon_by_citizen[c.id]) || []).length;
+      var line1 = document.createElement("div");
+      var makeStrong = function(txt) { var s = createEl("strong", null, String(txt)); return s; };
+      line1.appendChild(document.createTextNode("Survived "));
+      line1.appendChild(makeStrong(survivalTick));
+      line1.appendChild(document.createTextNode(" ticks \u00B7 "));
+      line1.appendChild(makeStrong(myRelsAll.length));
+      line1.appendChild(document.createTextNode(" relationship" + (myRelsAll.length !== 1 ? "s" : "") + " \u00B7 "));
+      line1.appendChild(makeStrong(wordsKnown));
+      line1.appendChild(document.createTextNode(" word" + (wordsKnown !== 1 ? "s" : "") + " known \u00B7 " + (c.role || "citizen")));
+      bioDiv.appendChild(line1);
+      if (c.birth_tick && c.birth_tick !== 0) {
+        var line2 = document.createElement("div");
+        line2.appendChild(document.createTextNode("Born "));
+        line2.appendChild(makeStrong("T" + c.birth_tick));
+        bioDiv.appendChild(line2);
+      }
+      if (myRelsAll.length > 0) {
+        var topRel = myRelsAll.slice().sort(function(a, b) { return Math.abs(b.score) - Math.abs(a.score); })[0];
+        var otherId = topRel.citizen_a === c.id ? topRel.citizen_b : topRel.citizen_a;
+        var line3 = document.createElement("div");
+        var closeStrong = createEl("strong", null, findCitizenName(otherId));
+        line3.appendChild(document.createTextNode("Closest: "));
+        line3.appendChild(closeStrong);
+        line3.appendChild(document.createTextNode(" (" + (topRel.type || "neutral") + ")"));
+        bioDiv.appendChild(line3);
+      }
+      statusPanel.appendChild(bioDiv);
+    });
 
     // Location
     var locText = "(" + Math.round(c.x || 0) + ", " + Math.round(c.y || 0) + ")";
@@ -5811,7 +6186,7 @@
     var lines = ["tick,heaps_beta,zipf_coeff,clustering,shared_vocab"];
     (state.science_history || []).forEach(function(s) { var m = s.metrics || {}; lines.push([s.tick, (m.heaps || {}).heaps_beta || "", (m.zipf || {}).zipf_coefficient || "", (m.network || {}).clustering_coefficient || "", (m.growth_curve || {}).current_vocab_size || ""].join(",")); });
     var blob = new Blob([lines.join("\n")], { type: "text/csv" }), url = URL.createObjectURL(blob);
-    var a = document.createElement("a"); a.href = url; a.download = "wildmind_learning.csv";
+    var a = document.createElement("a"); a.href = url; a.download = "a_new_world_learning.csv";
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     var toast = byId("export-toast"); if (toast) { toast.classList.add("visible"); setTimeout(function() { toast.classList.remove("visible"); }, 2500); }
   }
@@ -6714,35 +7089,93 @@
   // --- 19. Prediction Engine (div#prediction-engine) ---
   function renderPredictionEngine() {
     var container = byId("prediction-engine"); if (!container) return; clearEl(container);
-    var gc = (state.science || {}).growth_curve || {};
     var ls = state.live_state || {};
     var currentTick = ls.tick || 0;
     var currentVocab = state.shared_lexicon ? state.shared_lexicon.length : 0;
-    if (!gc.growth_model && currentVocab === 0) { container.appendChild(createEl("span", "muted-text", "Not enough data for predictions")); return; }
-    var predictions = [];
-    // Predict next vocabulary milestone
-    var nextMilestone = [10, 25, 50, 100, 200, 500].find(function(m) { return m > currentVocab; });
-    if (nextMilestone) {
-      var growthRate = gc.growth_rate || 0.1;
-      var ticksNeeded = growthRate > 0 ? Math.ceil((nextMilestone - currentVocab) / growthRate) : "?";
-      predictions.push({ title: "Next vocab milestone: " + nextMilestone + " words", detail: "Estimated in ~" + ticksNeeded + " ticks (current: " + currentVocab + ")", confidence: growthRate > 0 ? "medium" : "low" });
+    var snaps = state.snapshots || [];
+    var ustats = state.utterance_stats || {};
+    var citizens = getCitizens();
+    var allRels = state.relationships || [];
+
+    function addPred(label, main, sub) {
+      var item = createEl("div", "pred-item");
+      item.appendChild(createEl("div", "pred-label", "\u25B8 " + label));
+      item.appendChild(createEl("div", "pred-main", main));
+      if (sub) item.appendChild(createEl("div", "pred-sub", sub));
+      container.appendChild(item);
     }
-    // Predict based on growth model
-    if (gc.growth_model) {
-      predictions.push({ title: "Growth model: " + gc.growth_model, detail: "R-squared: " + (gc.r_squared || 0).toFixed(3), confidence: (gc.r_squared || 0) > 0.8 ? "high" : "medium" });
+
+    // 1. Vocab growth rate and next 5-word milestone
+    var growthRate = 0;
+    if (snaps.length >= 2) {
+      var recentSnaps = snaps.slice(-10);
+      var firstSnap = recentSnaps[0], lastSnap = recentSnaps[recentSnaps.length - 1];
+      var vocabDiff = (lastSnap.shared_vocab_size || 0) - (firstSnap.shared_vocab_size || 0);
+      var tickDiff = (lastSnap.tick || 0) - (firstSnap.tick || 0);
+      if (tickDiff > 0) growthRate = vocabDiff / tickDiff;
     }
-    // Population prediction
-    var citizens = getCitizens(), deaths = (state.deaths || []).length;
-    var births = (state.breeding_events || []).length;
-    var popTrend = births > deaths ? "growing" : births < deaths ? "declining" : "stable";
-    predictions.push({ title: "Population trend: " + popTrend, detail: citizens.length + " alive, " + births + " births, " + deaths + " deaths", confidence: "medium" });
-    predictions.forEach(function(p) {
-      var card = createEl("div", "cascade-card");
-      card.appendChild(createEl("div", "cascade-sound", p.title));
-      var detail = createEl("div", "cascade-stats"); detail.textContent = p.detail + " (confidence: " + p.confidence + ")";
-      card.appendChild(detail);
-      container.appendChild(card);
-    });
+    var nextMilestone5 = currentVocab + 5;
+    var ticksToMilestone = growthRate > 0 ? Math.round(5 / growthRate) : null;
+    addPred(
+      "VOCAB MILESTONE",
+      ticksToMilestone != null ? "Next 5 words in ~" + ticksToMilestone + " ticks" : "Next milestone: " + nextMilestone5 + " words",
+      "Current rate: " + (growthRate * 10).toFixed(1) + " words/10 ticks  \u00B7  now at " + currentVocab + " words"
+    );
+
+    // 2. Communication success trend from snapshots
+    if (snaps.length >= 4) {
+      var recentForTrend = snaps.slice(-20);
+      var half = Math.floor(recentForTrend.length / 2);
+      var earlySuccess = 0, lateSuccess = 0, earlyCount = 0, lateCount = 0;
+      recentForTrend.forEach(function(s, idx) {
+        var sr = s.communication_success_rate || 0;
+        if (idx < half) { earlySuccess += sr; earlyCount++; }
+        else { lateSuccess += sr; lateCount++; }
+      });
+      var earlyAvg = earlyCount > 0 ? earlySuccess / earlyCount : 0;
+      var lateAvg = lateCount > 0 ? lateSuccess / lateCount : 0;
+      var delta = lateAvg - earlyAvg;
+      var trendLabel = Math.abs(delta) < 0.02 ? "stable" : delta > 0 ? "improving" : "declining";
+      var trendDetail = delta !== 0 ? (delta > 0 ? "+" : "") + Math.round(delta * 100) + "% over last " + recentForTrend.length + " snapshots" : "no significant change";
+      addPred("COMMUNICATION TREND", "Success rate " + trendLabel, trendDetail);
+    } else {
+      var successRate = ustats.total_utterances > 0 ? Math.round((ustats.successful / ustats.total_utterances) * 100) : 0;
+      addPred("COMMUNICATION TREND", "Current success rate: " + successRate + "%", "Accumulating history for trend analysis");
+    }
+
+    // 3. Most isolated citizen
+    if (citizens.length > 0) {
+      var lexByCit = state.lexicon_by_citizen || {};
+      var sharedSounds = {};
+      (state.shared_lexicon || []).forEach(function(w) { sharedSounds[w.sound] = true; });
+      var mostIsolated = null, minShared = Infinity;
+      citizens.forEach(function(c) {
+        var personalVocab = lexByCit[c.id] || [];
+        var sharedCount = personalVocab.filter(function(v) { return sharedSounds[v.sound]; }).length;
+        var relCount = allRels.filter(function(r) { return r.citizen_a === c.id || r.citizen_b === c.id; }).length;
+        if (sharedCount < minShared) { minShared = sharedCount; mostIsolated = { citizen: c, sharedCount: sharedCount, relCount: relCount }; }
+      });
+      if (mostIsolated) {
+        addPred(
+          "ISOLATION RISK",
+          mostIsolated.citizen.name + " shares " + mostIsolated.sharedCount + " word" + (mostIsolated.sharedCount !== 1 ? "s" : "") + " with " + mostIsolated.relCount + " nearby citizen" + (mostIsolated.relCount !== 1 ? "s" : ""),
+          mostIsolated.sharedCount === 0 ? "Language isolation detected — no shared vocabulary" : "Low shared vocabulary may limit bonding"
+        );
+      }
+    }
+
+    // 4. Next expected event
+    var lexiconGrowthRecent = snaps.length >= 2 && growthRate > 0;
+    if (lexiconGrowthRecent) {
+      var ticksTo10 = currentVocab < 10 && growthRate > 0 ? Math.round((10 - currentVocab) / growthRate) : null;
+      if (ticksTo10 != null && ticksTo10 > 0) {
+        addPred("NEXT EVENT", "First-words milestone in ~" + ticksTo10 + " ticks", "Tribe approaching 10 shared words threshold");
+      }
+    }
+
+    if (container.children.length === 0) {
+      container.appendChild(createEl("span", "muted-text", "Accumulating data for predictions..."));
+    }
   }
 
   // --- 20. Environmental Storytelling (div#env-storytelling) ---
@@ -7287,17 +7720,26 @@
       var stats = createEl("div", "ps-world-stats");
       if (w.total_ticks) {
         var tickStat = createEl("span", "");
-        tickStat.innerHTML = "<span class='ps-world-stat-val'>" + w.total_ticks + "</span> ticks";
+        var tickVal = createEl("span", "ps-world-stat-val");
+        tickVal.textContent = w.total_ticks;
+        tickStat.appendChild(tickVal);
+        tickStat.appendChild(document.createTextNode(" ticks"));
         stats.appendChild(tickStat);
       }
       if (w.total_interactions) {
         var intStat = createEl("span", "");
-        intStat.innerHTML = "<span class='ps-world-stat-val'>" + w.total_interactions + "</span> interactions";
+        var intVal = createEl("span", "ps-world-stat-val");
+        intVal.textContent = w.total_interactions;
+        intStat.appendChild(intVal);
+        intStat.appendChild(document.createTextNode(" interactions"));
         stats.appendChild(intStat);
       }
       if (w.shared_words) {
         var wordStat = createEl("span", "");
-        wordStat.innerHTML = "<span class='ps-world-stat-val'>" + w.shared_words + "</span> shared words";
+        var wordVal = createEl("span", "ps-world-stat-val");
+        wordVal.textContent = w.shared_words;
+        wordStat.appendChild(wordVal);
+        wordStat.appendChild(document.createTextNode(" shared words"));
         stats.appendChild(wordStat);
       }
       header.appendChild(stats);

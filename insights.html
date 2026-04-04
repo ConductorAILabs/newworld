@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WildMind — Research Insights</title>
+  <title>A New World — Research Insights</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23d4a574'/></svg>">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,300;1,8..60,400;1,8..60,600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -138,18 +138,20 @@
 <body>
 
 <nav class="nav">
-  <a href="/" class="nav-logo"><span class="w">WILD</span><span class="m">MIND</span></a>
+  <a href="/" class="nav-logo"><span class="w">A NEW</span><span class="m"> WORLD</span></a>
   <div class="nav-links">
     <a href="/">Dashboard</a>
     <a href="/about.html">About</a>
     <a href="/worlds.html">Worlds</a>
     <a href="/insights.html" class="active">Research</a>
+    <a href="/howitworks.html">How It Works</a>
+    <a href="/guide.html">Guide</a>
     <a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener" class="support">Support</a>
   </div>
 </nav>
 
 <div class="loading-overlay" id="loadingOverlay">
-  <div style="font-family:var(--mono);font-size:.85rem;color:var(--amber);letter-spacing:3px;font-weight:700">WILDMIND</div>
+  <div style="font-family:var(--mono);font-size:.85rem;color:var(--amber);letter-spacing:3px;font-weight:700">A NEW WORLD</div>
   <div class="loading-bar"><div class="loading-bar-fill" id="loadingBar"></div></div>
   <div class="loading-text" id="loadingText">Connecting to simulation...</div>
 </div>
@@ -157,6 +159,13 @@
 <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation">&#9776;</button>
 
 <aside class="sidebar" id="sidebar">
+  <span class="sb-label">Navigate</span>
+  <a href="/">← Live Dashboard</a>
+  <a href="/worlds.html">Worlds</a>
+  <a href="/insights.html" class="active">Research</a>
+  <a href="/howitworks.html">How It Works</a>
+  <a href="/about.html">About</a>
+  <a href="/guide.html">Guide</a>
   <span class="sb-label">Analysis</span>
   <a href="#overview" class="active" data-section="overview">Overview</a>
   <a href="#zipf" data-section="zipf">Zipf's Law</a>
@@ -173,6 +182,11 @@
   <a href="#survival" data-section="survival">Survival &amp; Population</a>
   <a href="#worlds" data-section="worlds">World History</a>
   <a href="#training" data-section="training">Training History</a>
+  <span class="sb-label">Performance</span>
+  <a href="#benchmarks" data-section="benchmarks">Benchmarks</a>
+  <a href="#decisions" data-section="decisions">Decision Analysis</a>
+  <a href="#trainingMetrics" data-section="trainingMetrics">Training Evolution</a>
+  <a href="#narrativeMetrics" data-section="narrativeMetrics">Narratives</a>
   <span class="sb-label">Reference</span>
   <a href="#methodology" data-section="methodology">Methodology</a>
   <a href="#api-docs" data-section="api-docs">API Documentation</a>
@@ -185,7 +199,7 @@
 <!-- ══════ 01 OVERVIEW ══════ -->
 <div class="section" id="overview">
   <div class="section-hdr"><span class="section-num">01</span><h2 class="section-title">Overview Dashboard</h2></div>
-  <p class="section-desc">Key metrics from the WildMind simulation at a glance.</p><hr class="section-divider">
+  <p class="section-desc">Key metrics from the A New World simulation at a glance.</p><hr class="section-divider">
   <div id="overviewStage" style="margin-bottom:16px"></div>
   <div class="metrics-row" id="overviewMetrics"></div>
 </div>
@@ -311,9 +325,61 @@
   <div class="chart-wrap"><div class="chart-title">Training Dataset Composition</div><div class="chart-container"><canvas id="chartTraining"></canvas></div></div>
 </div>
 
-<!-- ══════ 14 METHODOLOGY ══════ -->
+<!-- ══════ 14 BENCHMARKS ══════ -->
+<div class="section" id="benchmarks">
+  <div class="section-hdr"><span class="section-num">14</span><h2 class="section-title">Benchmark Performance</h2></div>
+  <p class="section-desc">Decision quality, lexical consistency, communication growth, and utterance complexity tracked across all worlds. Each score is 0–1. Higher is better. This is the core evidence for the thesis that decision-making capacity improves across generations.</p><hr class="section-divider">
+  <div class="metrics-row" id="benchmarkMetrics"></div>
+  <div class="chart-wrap"><div class="chart-title">Benchmark Scores Across Worlds</div><div class="chart-container"><canvas id="chartBenchmarks" style="min-height:220px"></canvas></div></div>
+  <div class="chart-grid" style="margin-top:16px">
+    <div class="chart-wrap"><div class="chart-title">Decision Quality Trend</div><div class="chart-container"><canvas id="chartDecisionQuality"></canvas></div></div>
+    <div class="chart-wrap"><div class="chart-title">Communication Growth Trend</div><div class="chart-container"><canvas id="chartCommGrowth"></canvas></div></div>
+  </div>
+  <div id="benchmarkTableWrap" class="tbl-scroll" style="margin-top:16px"></div>
+</div>
+
+<!-- ══════ 15 DECISIONS ══════ -->
+<div class="section" id="decisions">
+  <div class="section-hdr"><span class="section-num">15</span><h2 class="section-title">Decision Analysis</h2></div>
+  <p class="section-desc">Every survival decision logged with context, pressure level, and outcome. Shows which choices correlate with survival under different pressure levels. Solo vs. group survival rates, pressure thresholds, and outcome distributions by decision type.</p><hr class="section-divider">
+  <div class="metrics-row" id="decisionMetrics"></div>
+  <div class="chart-grid">
+    <div class="chart-wrap"><div class="chart-title">Outcome Distribution by Decision Type</div><div class="chart-container"><canvas id="chartDecisionOutcomes" style="min-height:200px"></canvas></div></div>
+    <div class="chart-wrap"><div class="chart-title">Top Survival Choices (Thrive Rate)</div><div class="chart-container"><canvas id="chartTopChoices" style="min-height:200px"></canvas></div></div>
+  </div>
+  <div style="margin-top:16px">
+    <div class="filter-row"><input class="filter-input" id="decisionSearch" placeholder="Filter by decision type or choice..."></div>
+    <div class="tbl-scroll" id="decisionTableWrap"></div>
+  </div>
+</div>
+
+<!-- ══════ 16 TRAINING EVOLUTION ══════ -->
+<div class="section" id="trainingMetrics">
+  <div class="section-hdr"><span class="section-num">16</span><h2 class="section-title">Training Evolution</h2></div>
+  <p class="section-desc">Additive training runs across worlds: examples added per archetype, average reward, and improvement percentage over time.</p><hr class="section-divider">
+  <div class="metrics-row" id="trainingEvolutionMetrics"></div>
+  <div class="chart-wrap">
+    <div class="chart-title">Examples Added Per Archetype Per World</div>
+    <div class="chart-container"><canvas id="chartTrainingProgress" style="min-height:220px"></canvas></div>
+  </div>
+  <div id="trainingRunsTableWrap" class="tbl-scroll" style="margin-top:16px"></div>
+</div>
+
+<!-- ══════ 17 NARRATIVES ══════ -->
+<div class="section" id="narrativeMetrics">
+  <div class="section-hdr"><span class="section-num">17</span><h2 class="section-title">Narratives</h2></div>
+  <p class="section-desc">High-drama simulation events narrated in real time. Filter by drama score to surface the most significant moments.</p><hr class="section-divider">
+  <div class="filter-row" style="align-items:center;gap:16px;margin-bottom:20px">
+    <label style="font-family:var(--mono);font-size:.7rem;color:var(--dim);letter-spacing:1px;white-space:nowrap">DRAMA THRESHOLD</label>
+    <input type="range" id="dramaSlider" min="0" max="1" step="0.05" value="0.5" style="flex:1;accent-color:var(--amber);cursor:pointer">
+    <span id="dramaSliderVal" style="font-family:var(--mono);font-size:.75rem;color:var(--amber);min-width:32px">0.50</span>
+  </div>
+  <div id="narrativeCards"></div>
+</div>
+
+<!-- ══════ 18 METHODOLOGY ══════ -->
 <div class="section" id="methodology">
-  <div class="section-hdr"><span class="section-num">14</span><h2 class="section-title">Methodology</h2></div>
+  <div class="section-hdr"><span class="section-num">18</span><h2 class="section-title">Methodology</h2></div>
   <p class="section-desc">How the simulation, language metrics, and network analysis work.</p><hr class="section-divider">
   <div class="method-block"><h4>Simulation Architecture</h4><p>Each citizen is an independent AI model (fine-tuned LLM) that perceives its environment, makes decisions, and generates vocalizations. Citizens live in a simulated wilderness with latitude-based climate, biomes, predators, prey, and survival mechanics. Language emerges through repeated contextual interactions -- when two citizens encounter the same stimulus and both vocalize, the co-occurrence of sound and context gradually binds them into meaning.</p></div>
   <div class="method-block"><h4>Zipf's Law Computation</h4><p>We count the frequency of each unique sound in the full utterance log. Sounds are ranked by frequency. On a log-log plot, Zipf's Law predicts a linear relationship with slope approximately <code>-1.0</code>. We compute the coefficient via OLS linear regression on <code>log(rank)</code> vs <code>log(frequency)</code>. Natural human languages typically show coefficients between <code>-0.8</code> and <code>-1.2</code>.</p></div>
@@ -321,12 +387,12 @@
   <div class="method-block"><h4>Network Analysis</h4><p>The social network is constructed from interaction history. Edges are weighted by interaction frequency and relationship score. We compute the <strong>clustering coefficient</strong>, <strong>average path length</strong>, and <strong>degree distribution</strong>. These are compared to an Erdos-Renyi random graph with the same parameters.</p></div>
   <div class="method-block"><h4>PageRank / Influence</h4><p>Linguistic influence uses modified PageRank on the vocabulary transfer graph. An edge from A to B exists if B learned a sound that A established. Citizens with high PageRank are vocabulary hubs.</p></div>
   <div class="method-block"><h4>Known Limitations</h4><p>Small population (6-15 citizens) limits statistical power. The LLM substrate introduces biases. Phoneme analysis operates at character level. Zipf and Heaps fits may be noisy at low token counts. Cross-world comparisons are confounded by parameter changes.</p></div>
-  <div class="citation">WildMind: Emergent Language in Self-Teaching AI Populations. 2026. Available at: <a href="https://cosmic-piroshki-aeb441.netlify.app" target="_blank">https://cosmic-piroshki-aeb441.netlify.app</a></div>
+  <div class="citation">A New World: Emergent Language in Self-Teaching AI Populations. 2026. Available at: <a href="https://cosmic-piroshki-aeb441.netlify.app" target="_blank">https://cosmic-piroshki-aeb441.netlify.app</a></div>
 </div>
 
-<!-- ══════ 15 API DOCS ══════ -->
+<!-- ══════ 19 API DOCS ══════ -->
 <div class="section" id="api-docs">
-  <div class="section-hdr"><span class="section-num">15</span><h2 class="section-title">API Documentation</h2></div>
+  <div class="section-hdr"><span class="section-num">19</span><h2 class="section-title">API Documentation</h2></div>
   <p class="section-desc">Public endpoints for programmatic access to simulation data.</p><hr class="section-divider">
   <div class="method-block"><h4>Base URL</h4><pre>https://cosmic-piroshki-aeb441.netlify.app</pre></div>
   <div class="method-block"><h4>GET /api/state</h4><p>Full simulation state. Primary endpoint used by this page.</p><pre>curl -s https://cosmic-piroshki-aeb441.netlify.app/api/state | jq '.shared_lexicon[:3]'</pre></div>
@@ -340,9 +406,9 @@
   <div class="method-block"><h4>Response Format</h4><p>All endpoints return JSON with CORS headers. Error responses include an <code>error</code> field.</p></div>
 </div>
 
-<!-- ══════ 16 EXPORT ══════ -->
+<!-- ══════ 20 EXPORT ══════ -->
 <div class="section" id="export">
-  <div class="section-hdr"><span class="section-num">16</span><h2 class="section-title">Data Export</h2></div>
+  <div class="section-hdr"><span class="section-num">20</span><h2 class="section-title">Data Export</h2></div>
   <p class="section-desc">Download current simulation data for offline analysis.</p><hr class="section-divider">
   <div class="btn-row">
     <button class="btn" id="dlSharedLex">Shared Lexicon CSV</button>
@@ -359,7 +425,7 @@
 </div>
 
 <footer class="foot">
-  <div class="foot-logo"><span class="w">WILD</span><span class="m">MIND</span></div>
+  <div class="foot-logo"><span class="w">A NEW</span><span class="m"> WORLD</span></div>
   <div class="foot-text"><a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener">Support this project</a> &middot; Research-grade analysis of emergent AI language</div>
 </footer>
 
@@ -485,17 +551,28 @@ function apiFetch(url){var o={};if(API_KEY)o.headers={'x-api-key':API_KEY};retur
 
 function load(){
   sL(10,'Connecting...'); sL(30,'Fetching state...');
-  apiFetch('/api/state').then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); sL(60,'Parsing...'); return r.json() }).then(function(d){
-    D=d; sL(80,'Rendering...');
-    setTimeout(function(){ renderAll(); sL(100,'Complete'); setTimeout(function(){ $('loadingOverlay').classList.add('hidden') },400) },60);
-  }).catch(function(e){ sL(100,'Error: '+e.message); console.error(e); setTimeout(load,3000) });
+  Promise.all([
+    apiFetch('/api/state').then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }),
+    apiFetch('/api/training').then(function(r){ return r.json(); }).catch(function(){ return { insights:[], runs:[] }; }),
+    apiFetch('/api/narratives').then(function(r){ return r.json(); }).catch(function(){ return { narratives:[] }; }),
+  ]).then(function(results){
+    D = results[0];
+    D.training = results[1];
+    D.narratives = results[2];
+    sL(80,'Rendering...');
+    setTimeout(function(){ renderAll(); sL(100,'Complete'); setTimeout(function(){ $('loadingOverlay').classList.add('hidden') },400); },60);
+  }).catch(function(e){ sL(100,'Error: '+e.message); console.error(e); setTimeout(load,3000); });
 }
 
 /* ═══════════════════════════════════════════
    RENDER ALL SECTIONS
    ═══════════════════════════════════════════ */
 function renderAll(){
-  var fns=[rOverview,rZipf,rHeaps,rNetwork,rGrowth,rInfluence,rDict,rPhonemes,rEfficiency,rSocial,rSurvival,rWorlds,rTraining,rExports];
+  var fns=[rOverview,rZipf,rHeaps,rNetwork,rGrowth,rInfluence,rDict,rPhonemes,rEfficiency,rSocial,rSurvival,rWorlds,rTraining,renderBenchmarks,renderDecisions,
+    function(){ renderTraining(D); },
+    function(){ renderNarratives(D); },
+    rExports
+  ];
   for(var i=0;i<fns.length;i++) try{fns[i]()}catch(e){console.error('Render error in section '+i+':',e)}
 }
 
@@ -602,7 +679,7 @@ function rZipf(){
       type:'scatter',
       data:{
         datasets:[
-          { label:'WildMind Data', data:scatterData, backgroundColor:'rgba(212,165,116,0.7)', borderColor:COL.a, pointRadius:4, pointHoverRadius:6, order:2 },
+          { label:'A New World Data', data:scatterData, backgroundColor:'rgba(212,165,116,0.7)', borderColor:COL.a, pointRadius:4, pointHoverRadius:6, order:2 },
           { label:'Ideal Zipf (slope -1)', data:idealLine, type:'line', borderColor:COL.g, borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false, order:1 }
         ]
       },
@@ -801,7 +878,7 @@ function rNetwork(){
   charts['chartClustering'] = new Chart($('chartClustering'), {
     type:'doughnut',
     data:{
-      labels:['WildMind Clustering','Random Baseline','Remaining'],
+      labels:['A New World Clustering','Random Baseline','Remaining'],
       datasets:[{
         data:[wcVal, rcVal, Math.max(0, 1-wcVal-rcVal)],
         backgroundColor:['rgba(212,165,116,0.8)','rgba(58,54,64,0.6)','rgba(20,20,29,0.3)'],
@@ -1037,8 +1114,8 @@ function rDict(){
     });
   }
 
-  $('exportSharedCSV').onclick=function(){dlCSV('wildmind_shared_lexicon.csv',['sound','meaning','confidence','citizen_count','tick_established','established_by'],sR)};
-  $('exportPersonalCSV').onclick=function(){dlCSV('wildmind_personal_lexicon.csv',['citizen','sound','meaning','confidence','times_used','tick_learned'],pR)};
+  $('exportSharedCSV').onclick=function(){dlCSV('a_new_world_shared_lexicon.csv',['sound','meaning','confidence','citizen_count','tick_established','established_by'],sR)};
+  $('exportPersonalCSV').onclick=function(){dlCSV('a_new_world_personal_lexicon.csv',['citizen','sound','meaning','confidence','times_used','tick_learned'],pR)};
 }
 
 /* ═══════════════════════════════════════════
@@ -1538,30 +1615,354 @@ function rTraining(){
 }
 
 /* ═══════════════════════════════════════════
-   16 EXPORTS
+   14 BENCHMARKS
+   ═══════════════════════════════════════════ */
+function renderBenchmarks() {
+  var bmarks = D.benchmarks || [];
+  var parsed = bmarks.map(function(b) {
+    var r = {};
+    try { r = typeof b.results === 'string' ? JSON.parse(b.results) : (b.results || {}); } catch(e) {}
+    return { world_id: b.world_id, tick: b.tick, stage: b.stage, score: b.score, results: r };
+  });
+
+  var latest = parsed[parsed.length - 1] || null;
+  var bm = $('benchmarkMetrics');
+  if (bm) {
+    if (!latest) {
+      bm.innerHTML = '<div class="metric-card"><div class="metric-label">Status</div><div class="metric-val" style="font-size:1rem;color:var(--dim)">No benchmark data yet</div><div class="metric-sub">Runs after each world ends</div></div>';
+    } else {
+      var r = latest.results;
+      var cards = [
+        { label: 'Decision Quality', val: r.decision_quality, color: 'amber' },
+        { label: 'Lexical Consistency', val: r.lexical_consistency, color: 'green' },
+        { label: 'Comm Growth', val: r.communication_growth, color: 'blue' },
+        { label: 'Utterance Complexity', val: r.utterance_complexity, color: 'amber' },
+        { label: 'Lexicon Spread', val: r.lexicon_spread, color: 'green' },
+      ];
+      bm.innerHTML = cards.map(function(c) {
+        var v = c.val != null ? (parseFloat(c.val) * 100).toFixed(0) + '%' : '--';
+        return '<div class="metric-card"><div class="metric-label">' + c.label + '</div><div class="metric-val ' + c.color + '">' + v + '</div><div class="metric-sub">World ' + latest.world_id + '</div></div>';
+      }).join('');
+    }
+  }
+
+  destroyChart('chartBenchmarks');
+  var cvs = $('chartBenchmarks');
+  if (cvs && parsed.length > 0) {
+    var labels = parsed.map(function(b) { return 'W' + b.world_id; });
+    var metrics = ['decision_quality','lexical_consistency','communication_growth','utterance_complexity'];
+    var colors = ['#d4a574','#4a9e6e','#5a9bba','#c44a20'];
+    var names = ['Decision Quality','Lex Consistency','Comm Growth','Utterance Complexity'];
+    charts['chartBenchmarks'] = new Chart(cvs, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: metrics.map(function(m, i) {
+          return {
+            label: names[i],
+            data: parsed.map(function(b) { return b.results[m] != null ? parseFloat(b.results[m]) : null; }),
+            borderColor: colors[i], backgroundColor: colors[i] + '22',
+            borderWidth: 2, pointRadius: 3, tension: 0.3, spanGaps: true,
+          };
+        }),
+      },
+      options: { responsive: true, scales: { y: { min: 0, max: 1, ticks: { callback: function(v) { return (v*100).toFixed(0)+'%'; } } } }, plugins: { legend: { display: true } } }
+    });
+  }
+
+  destroyChart('chartDecisionQuality');
+  var dq = $('chartDecisionQuality');
+  if (dq && parsed.length > 0) {
+    charts['chartDecisionQuality'] = new Chart(dq, {
+      type: 'bar',
+      data: {
+        labels: parsed.map(function(b) { return 'W' + b.world_id; }),
+        datasets: [{ label: 'Decision Quality', data: parsed.map(function(b) { return b.results.decision_quality != null ? parseFloat(b.results.decision_quality) : null; }), backgroundColor: '#d4a574aa', borderColor: '#d4a574', borderWidth: 1 }]
+      },
+      options: { responsive: true, scales: { y: { min: 0, max: 1, ticks: { callback: function(v) { return (v*100).toFixed(0)+'%'; } } } }, plugins: { legend: { display: false } } }
+    });
+  }
+
+  destroyChart('chartCommGrowth');
+  var cg = $('chartCommGrowth');
+  if (cg && parsed.length > 0) {
+    charts['chartCommGrowth'] = new Chart(cg, {
+      type: 'bar',
+      data: {
+        labels: parsed.map(function(b) { return 'W' + b.world_id; }),
+        datasets: [{ label: 'Comm Growth', data: parsed.map(function(b) { return b.results.communication_growth != null ? parseFloat(b.results.communication_growth) : null; }), backgroundColor: '#5a9bbaaa', borderColor: '#5a9bba', borderWidth: 1 }]
+      },
+      options: { responsive: true, scales: { y: { min: 0, max: 1, ticks: { callback: function(v) { return (v*100).toFixed(0)+'%'; } } } }, plugins: { legend: { display: false } } }
+    });
+  }
+
+  var tw = $('benchmarkTableWrap');
+  if (tw && parsed.length > 0) {
+    BT(tw, ['World','Ticks','Stage','Decision Q','Lex Consist','Comm Growth','Complexity'],
+      parsed.map(function(b) {
+        var r = b.results;
+        function p(v) { return v != null ? (parseFloat(v)*100).toFixed(1)+'%' : '--'; }
+        return [b.world_id, b.tick, b.stage||'--', p(r.decision_quality), p(r.lexical_consistency), p(r.communication_growth), p(r.utterance_complexity)];
+      })
+    );
+  }
+}
+
+/* ═══════════════════════════════════════════
+   15 DECISIONS
+   ═══════════════════════════════════════════ */
+function renderDecisions() {
+  var ds = D.decision_summary || [];
+  var dm = $('decisionMetrics');
+  if (dm) {
+    var total = ds.reduce(function(s,d) { return s + parseInt(d.total||0); }, 0);
+    var avgThrive = ds.length ? ds.reduce(function(s,d) { return s + parseFloat(d.thrive_rate||0); },0)/ds.length : 0;
+    var types = {};
+    ds.forEach(function(d) { types[d.decision_type] = true; });
+    dm.innerHTML = [
+      { label: 'Total Decisions', val: total.toLocaleString(), color: 'amber', sub: 'all time' },
+      { label: 'Avg Thrive Rate', val: (avgThrive*100).toFixed(1)+'%', color: 'green', sub: 'across choices' },
+      { label: 'Decision Types', val: Object.keys(types).length, color: 'blue', sub: 'categories' },
+      { label: 'Choices Tracked', val: ds.length, color: 'amber', sub: 'distinct choices' },
+    ].map(function(c) {
+      return '<div class="metric-card"><div class="metric-label">' + c.label + '</div><div class="metric-val ' + c.color + '">' + c.val + '</div><div class="metric-sub">' + c.sub + '</div></div>';
+    }).join('');
+  }
+
+  destroyChart('chartDecisionOutcomes');
+  var oc = $('chartDecisionOutcomes');
+  if (oc && ds.length > 0) {
+    var types2 = {};
+    ds.forEach(function(d) {
+      if (!types2[d.decision_type]) types2[d.decision_type] = {thrive:0,survive:0,died:0,total:0};
+      var t = types2[d.decision_type]; var n = parseInt(d.total||0);
+      t.thrive += parseFloat(d.thrive_rate||0)*n; t.survive += parseFloat(d.survive_rate||0)*n;
+      t.died += parseFloat(d.death_rate||0)*n; t.total += n;
+    });
+    var tLabels = Object.keys(types2).map(function(k) { return k.replace('survival_','').replace(/_/g,' '); });
+    var tData = Object.values(types2);
+    charts['chartDecisionOutcomes'] = new Chart(oc, {
+      type: 'bar',
+      data: {
+        labels: tLabels,
+        datasets: [
+          { label: 'Thrive', data: tData.map(function(t) { return t.total?t.thrive/t.total:0; }), backgroundColor: '#4a9e6e88', borderColor: '#4a9e6e', borderWidth: 1 },
+          { label: 'Survive', data: tData.map(function(t) { return t.total?t.survive/t.total:0; }), backgroundColor: '#5a9bba88', borderColor: '#5a9bba', borderWidth: 1 },
+          { label: 'Died', data: tData.map(function(t) { return t.total?t.died/t.total:0; }), backgroundColor: '#c44a2088', borderColor: '#c44a20', borderWidth: 1 },
+        ]
+      },
+      options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: function(v) { return (v*100).toFixed(0)+'%'; } } } }, plugins: { legend: { display: true } } }
+    });
+  }
+
+  destroyChart('chartTopChoices');
+  var tc = $('chartTopChoices');
+  if (tc && ds.length > 0) {
+    var filtered = ds.filter(function(d) { return parseInt(d.total||0) >= 5; })
+      .sort(function(a,b) { return parseFloat(b.thrive_rate||0) - parseFloat(a.thrive_rate||0); })
+      .slice(0, 10);
+    charts['chartTopChoices'] = new Chart(tc, {
+      type: 'bar',
+      data: {
+        labels: filtered.map(function(d) { return d.choice ? d.choice.replace(/_/g,' ').slice(0,20) : '--'; }),
+        datasets: [{ label: 'Thrive Rate', data: filtered.map(function(d) { return parseFloat(d.thrive_rate||0); }), backgroundColor: '#d4a57488', borderColor: '#d4a574', borderWidth: 1 }]
+      },
+      options: { indexAxis: 'y', responsive: true, scales: { x: { min:0, max:1, ticks: { callback: function(v){ return (v*100).toFixed(0)+'%'; } } } }, plugins: { legend: { display: false } } }
+    });
+  }
+
+  var dtw = $('decisionTableWrap');
+  if (dtw) {
+    if (!ds.length) {
+      dtw.innerHTML = '<div style="font-family:var(--mono);font-size:.75rem;color:var(--muted);padding:20px;text-align:center">No decision data yet</div>';
+    } else {
+      var tbl = BT(dtw, ['Type','Choice','Total','Thrive%','Survive%','Die%','Avg Pressure'],
+        ds.map(function(d) {
+          return [
+            (d.decision_type||'').replace('survival_','').replace(/_/g,' '),
+            d.choice||'--',
+            d.total,
+            d.thrive_rate != null ? (parseFloat(d.thrive_rate)*100).toFixed(1)+'%' : '--',
+            d.survive_rate != null ? (parseFloat(d.survive_rate)*100).toFixed(1)+'%' : '--',
+            d.death_rate != null ? (parseFloat(d.death_rate)*100).toFixed(1)+'%' : '--',
+            d.avg_pressure != null ? parseFloat(d.avg_pressure).toFixed(2) : '--',
+          ];
+        })
+      );
+      $('decisionSearch') && ($('decisionSearch').oninput = function() {
+        var q = this.value.toLowerCase();
+        tbl.sf(q ? function(r) { return r.some(function(v) { return String(v).toLowerCase().indexOf(q) >= 0; }); } : null);
+      });
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════
+   16 TRAINING EVOLUTION
+   ═══════════════════════════════════════════ */
+function renderTraining(D){
+  var insights = (D.training && D.training.insights) || [];
+  var runs = (D.training && D.training.runs) || [];
+
+  // Summary metrics
+  var em = $('trainingEvolutionMetrics');
+  if(em){
+    var totalRuns = runs.length;
+    var totalExamples = runs.reduce(function(s,r){ return s + parseInt(r.total_examples||0); }, 0);
+    var archetypeSet = {};
+    insights.forEach(function(i){ archetypeSet[i.archetype] = true; });
+    var archetypesCount = Object.keys(archetypeSet).length;
+    em.innerHTML = [
+      { label: 'Training Runs', val: totalRuns, color: 'amber', sub: 'worlds trained' },
+      { label: 'Total Examples', val: fmt(totalExamples), color: 'green', sub: 'across all runs' },
+      { label: 'Archetypes', val: archetypesCount || '--', color: 'blue', sub: 'updated' },
+    ].map(function(c){
+      return '<div class="metric-card"><div class="metric-label">'+c.label+'</div><div class="metric-val '+c.color+'">'+c.val+'</div><div class="metric-sub">'+c.sub+'</div></div>';
+    }).join('');
+  }
+
+  // Chart: examples_added per world per archetype
+  destroyChart('chartTrainingProgress');
+  var cvs = $('chartTrainingProgress');
+  if(cvs && insights.length > 0){
+    // Collect worlds and archetypes
+    var worldSet = {}, archetypes = ['Alpha','Intellectual','Provider','Wildcard'];
+    insights.forEach(function(i){ worldSet[i.world_id] = true; });
+    var worldIds = Object.keys(worldSet).sort(function(a,b){ return parseInt(a)-parseInt(b); });
+    var arcColors = { Alpha: '#d4a574', Intellectual: '#5a9bba', Provider: '#4a9e6e', Wildcard: '#c44a20' };
+
+    // Build dataset per archetype
+    var datasets = archetypes.map(function(arch){
+      return {
+        label: arch,
+        data: worldIds.map(function(wid){
+          var match = insights.filter(function(i){ return String(i.world_id)===String(wid) && i.archetype===arch; });
+          return match.length ? match.reduce(function(s,m){ return s+parseInt(m.examples_added||0); },0) : null;
+        }),
+        borderColor: arcColors[arch],
+        backgroundColor: arcColors[arch]+'33',
+        borderWidth: 2,
+        pointRadius: 3,
+        tension: 0.3,
+        spanGaps: true,
+      };
+    });
+
+    charts['chartTrainingProgress'] = new Chart(cvs, {
+      type: 'line',
+      data: { labels: worldIds.map(function(w){ return 'W'+w; }), datasets: datasets },
+      options: {
+        responsive: true, maintainAspectRatio: true, aspectRatio: 2.5,
+        scales: {
+          x: { title: { display: true, text: 'World', color: '#706a5e' }, grid: { color: 'rgba(255,255,255,0.03)' } },
+          y: { title: { display: true, text: 'Examples Added', color: '#706a5e' }, grid: { color: 'rgba(255,255,255,0.03)' }, beginAtZero: true }
+        },
+        plugins: { legend: { display: true } }
+      }
+    });
+  }
+
+  // Table: last 10 training runs
+  var tw = $('trainingRunsTableWrap');
+  if(tw){
+    if(!runs.length){
+      tw.innerHTML = '<div style="font-family:var(--mono);font-size:.75rem;color:var(--muted);padding:20px;text-align:center">No training run data yet</div>';
+    } else {
+      var last10 = runs.slice(0,10);
+      BT(tw, ['World','Total Examples','Archetypes Updated','Duration (ms)','Date'],
+        last10.map(function(r){
+          return [
+            r.world_id,
+            r.total_examples,
+            r.archetypes_updated,
+            r.training_duration_ms != null ? parseInt(r.training_duration_ms) : '--',
+            r.created_at ? String(r.created_at).slice(0,19).replace('T',' ') : '--',
+          ];
+        })
+      );
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════
+   17 NARRATIVES
+   ═══════════════════════════════════════════ */
+function renderNarratives(D){
+  var narratives = (D.narratives && D.narratives.narratives) || [];
+  var slider = $('dramaSlider');
+  var sliderVal = $('dramaSliderVal');
+  var cardsEl = $('narrativeCards');
+  if(!cardsEl) return;
+
+  function renderCards(){
+    var threshold = slider ? parseFloat(slider.value) : 0.5;
+    if(sliderVal) sliderVal.textContent = threshold.toFixed(2);
+    var filtered = narratives.filter(function(n){ return parseFloat(n.drama_score||0) >= threshold; });
+    filtered.sort(function(a,b){ return parseFloat(b.drama_score||0) - parseFloat(a.drama_score||0); });
+
+    if(!filtered.length){
+      cardsEl.innerHTML = '<div style="font-family:var(--mono);font-size:.78rem;color:var(--muted);padding:32px;text-align:center;background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:8px">'+(narratives.length ? 'No narratives above drama threshold ' + threshold.toFixed(2) + '. Lower the slider.' : 'No narrative data yet — narratives are generated as citizens experience dramatic events.')+'</div>';
+      return;
+    }
+
+    var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px">';
+    filtered.forEach(function(n){
+      var score = parseFloat(n.drama_score||0);
+      var scorePct = Math.round(score*100);
+      var barColor = score >= 0.8 ? '#c44a20' : score >= 0.6 ? '#d4a574' : '#5a9bba';
+      var eventLabel = (n.event_type||'event').replace(/_/g,' ');
+      var text = n.narrative_text || '';
+      if(text.length > 280) text = text.slice(0,280) + '\u2026';
+      html += '<div style="background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:18px;border-left:3px solid '+barColor+'">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">';
+      html += '<span style="font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--amber);letter-spacing:1px;text-transform:uppercase">'+E(eventLabel)+'</span>';
+      html += '<span style="font-family:var(--mono);font-size:.65rem;color:var(--dim)">W'+E(String(n.world_id||''))+(n.tick?'&nbsp;&middot;&nbsp;T'+E(String(n.tick)):'')+'</span>';
+      html += '</div>';
+      html += '<div style="font-family:var(--mono);font-size:.65rem;color:var(--dim);margin-bottom:6px">Citizen: <span style="color:var(--text)">'+E(String(n.citizen_id||'--'))+'</span></div>';
+      html += '<div style="margin-bottom:10px">';
+      html += '<div style="display:flex;align-items:center;gap:8px">';
+      html += '<span style="font-family:var(--mono);font-size:.6rem;color:var(--dim);white-space:nowrap">Drama</span>';
+      html += '<div style="flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden"><div style="width:'+scorePct+'%;height:100%;background:'+barColor+';border-radius:2px;transition:width .3s"></div></div>';
+      html += '<span style="font-family:var(--mono);font-size:.65rem;color:'+barColor+'">'+scorePct+'%</span>';
+      html += '</div></div>';
+      html += '<p style="font-size:.82rem;color:var(--text);line-height:1.65;margin:0">'+E(text)+'</p>';
+      html += '</div>';
+    });
+    html += '</div>';
+    cardsEl.innerHTML = html;
+  }
+
+  if(slider){
+    slider.oninput = renderCards;
+  }
+  renderCards();
+}
+
+/* ═══════════════════════════════════════════
+   20 EXPORTS
    ═══════════════════════════════════════════ */
 function rExports(){
   $('dlSharedLex').onclick=function(){
     var r=(D.shared_lexicon||[]).map(function(s){return[s.sound,s.meaning,s.confidence,s.citizen_count,s.tick_established,(s.established_by||[]).join(';')]});
-    dlCSV('wildmind_shared_lexicon.csv',['sound','meaning','confidence','citizen_count','tick_established','established_by'],r);
+    dlCSV('a_new_world_shared_lexicon.csv',['sound','meaning','confidence','citizen_count','tick_established','established_by'],r);
   };
   $('dlFullLex').onclick=function(){
     var r=[],l=D.lexicon_by_citizen||{};
     for(var c in l) if(l.hasOwnProperty(c)) for(var i=0;i<l[c].length;i++){var e=l[c][i];r.push([c,cn(c),e.sound,e.meaning,e.confidence,e.times_used,e.tick_learned])}
-    dlCSV('wildmind_full_lexicon.csv',['id','name','sound','meaning','confidence','times_used','tick_learned'],r);
+    dlCSV('a_new_world_full_lexicon.csv',['id','name','sound','meaning','confidence','times_used','tick_learned'],r);
   };
   $('dlCitizens').onclick=function(){
     var r=(D.citizens_db||[]).map(function(c){return[c.id,c.name,c.role,c.age,c.sex,c.mood,c.energy,c.status,c.alive,c.x,c.y]});
-    dlCSV('wildmind_citizens.csv',['id','name','role','age','sex','mood','energy','status','alive','x','y'],r);
+    dlCSV('a_new_world_citizens.csv',['id','name','role','age','sex','mood','energy','status','alive','x','y'],r);
   };
-  $('dlScience').onclick=function(){ dlJSON('wildmind_science.json',D.science||{}) };
+  $('dlScience').onclick=function(){ dlJSON('a_new_world_science.json',D.science||{}) };
   $('dlRelationships').onclick=function(){
     var r=(D.relationships||[]).map(function(r){return[r.citizen_a,cn(r.citizen_a),r.citizen_b,cn(r.citizen_b),r.score,r.type]});
-    dlCSV('wildmind_relationships.csv',['a_id','a_name','b_id','b_name','score','type'],r);
+    dlCSV('a_new_world_relationships.csv',['a_id','a_name','b_id','b_name','score','type'],r);
   };
   $('dlSnapshots').onclick=function(){
     var r=(D.snapshots||[]).map(function(s){return[s.tick,s.day,s.season,s.alive_count,s.shared_vocab_size,s.total_interactions,s.communication_success_rate,s.stage]});
-    dlCSV('wildmind_snapshots.csv',['tick','day','season','alive','vocab','interactions','success_rate','stage'],r);
+    dlCSV('a_new_world_snapshots.csv',['tick','day','season','alive','vocab','interactions','success_rate','stage'],r);
   };
 }
 
@@ -1596,5 +1997,14 @@ document.addEventListener('DOMContentLoaded',function(){ initSpy(); initMob(); l
 
 })();
 </script>
+
+  <!-- Conductor AI Labs badge -->
+  <div class="conductor-badge">
+    <a href="https://conductorailabs.com/" target="_blank" rel="noopener noreferrer">
+      <span class="conductor-badge-dot"></span>
+      <span class="conductor-badge-text">A <strong>Conductor AI Labs</strong> experiment</span>
+    </a>
+  </div>
+
 </body>
 </html>

@@ -3,78 +3,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WildMind — If The World Ended, How Would We Start Again?</title>
+  <title>A New World — If The World Ended, How Would We Start Again?</title>
   <meta name="api-key" content="">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23d4a574'/></svg>">
 </head>
 <body>
 
-  <!-- ========== Fixed Top Bar ========== -->
-  <header class="top-bar">
-    <div class="top-bar-left">
-      <div class="logo"><span class="wild">Wild</span><span class="mind">Mind</span></div>
-      <div class="logo-tagline">If the world ended, how would we start again?</div>
-      <div class="world-info">
-        <div class="info-badge" data-tooltip="One simulation heartbeat. Every 30-90 seconds, the world advances one tick.">
-          <span class="label">Tick</span>
-          <span class="value" id="tick-value">--</span>
-        </div>
-        <div class="info-badge">
-          <span class="label">Day</span>
-          <span class="value" id="day-value">--</span>
-        </div>
-        <div class="info-badge">
-          <span class="label">Season</span>
-          <span class="value" id="season-value">--</span>
-        </div>
-        <div class="info-badge">
-          <span class="label">Time</span>
-          <span class="value" id="time-value">--</span>
-        </div>
-        <div class="info-badge">
-          <span class="label">Weather</span>
-          <span class="value" id="weather-value">--</span>
-        </div>
-      </div>
+  <!-- ========== Side Navigation ========== -->
+  <aside class="side-nav" id="side-nav">
+    <!-- Brand -->
+    <div class="snav-brand">
+      <div class="snav-logo"><span class="snav-wild">A New</span><span class="snav-mind"> World</span></div>
+      <div class="snav-tagline">If the world ended,<br>how would we start again?</div>
     </div>
-    <div class="top-bar-center">
-      <div class="world-badge" id="world-badge">World --</div>
-      <div id="stage-indicator" class="stage-indicator stage-pre-language">Pre-Language</div>
-      <div class="connection-status">
+
+    <!-- Live status -->
+    <div class="snav-status">
+      <div class="snav-world-row">
+        <span class="world-badge" id="world-badge">World --</span>
+        <span id="stage-indicator" class="stage-indicator stage-pre-language">Pre-Language</span>
+      </div>
+      <div class="snav-conn">
         <div id="status-dot" class="status-dot" role="status" aria-live="polite"></div>
-        <span id="connection-label">Connecting...</span>
+        <span id="connection-label" class="snav-conn-label">Connecting...</span>
       </div>
     </div>
-    <nav class="tab-nav" id="tab-nav">
-      <button class="tab-btn active" data-tab="overview" aria-label="Overview">Overview</button>
-      <button class="tab-btn" data-tab="citizens" aria-label="Citizens">Citizens</button>
-      <button class="tab-btn" data-tab="language" aria-label="Language">Language</button>
-      <button class="tab-btn" data-tab="events" aria-label="Events">Events</button>
-      <button class="tab-btn" data-tab="learning" aria-label="Learning">Learning</button>
-      <button class="tab-btn tab-btn-proto" data-tab="proto-sounds" aria-label="Proto-Sounds">◉ Proto-Sounds</button>
-      <a href="worlds.html" class="tab-btn tab-link">Worlds</a>
-      <a href="insights.html" class="tab-btn tab-link">Research</a>
-      <a href="about.html" class="tab-btn tab-link">About</a>
-      <a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener" class="support-btn">Support This Project</a>
+
+    <!-- World info grid -->
+    <div class="snav-world-info">
+      <div class="snav-wi-row">
+        <span class="snav-wi-k">Tick</span><span class="snav-wi-v" id="tick-value">--</span>
+      </div>
+      <div class="snav-wi-row">
+        <span class="snav-wi-k">Day</span><span class="snav-wi-v" id="day-value">--</span>
+      </div>
+      <div class="snav-wi-row">
+        <span class="snav-wi-k">Season</span><span class="snav-wi-v" id="season-value">--</span>
+      </div>
+      <div class="snav-wi-row">
+        <span class="snav-wi-k">Time</span><span class="snav-wi-v" id="time-value">--</span>
+      </div>
+      <div class="snav-wi-row">
+        <span class="snav-wi-k">Weather</span><span class="snav-wi-v" id="weather-value">--</span>
+      </div>
+    </div>
+
+    <div class="snav-sep"></div>
+
+    <!-- Live Dashboard nav -->
+    <nav class="snav-nav">
+      <span class="snav-sec-lbl">LIVE DASHBOARD</span>
+      <button class="snav-item tab-btn active" data-tab="overview">
+        <span class="snav-ic">◎</span>Overview
+      </button>
+      <button class="snav-item tab-btn" data-tab="citizens">
+        <span class="snav-ic">◈</span>Citizens
+      </button>
+      <button class="snav-item tab-btn" data-tab="language">
+        <span class="snav-ic">◎</span>Language
+      </button>
+      <button class="snav-item tab-btn" data-tab="events">
+        <span class="snav-ic">⚡</span>Events
+      </button>
+      <button class="snav-item tab-btn" data-tab="learning">
+        <span class="snav-ic">◫</span>Learning
+      </button>
+      <button class="snav-item tab-btn snav-item-proto" data-tab="proto-sounds">
+        <span class="snav-ic">◉</span>Proto-Sounds
+      </button>
+
+      <span class="snav-sec-lbl">EXPLORE</span>
+      <a href="worlds.html" class="snav-item snav-link">
+        <span class="snav-ic">⊞</span>Worlds
+      </a>
+      <a href="insights.html" class="snav-item snav-link">
+        <span class="snav-ic">⊡</span>Research
+      </a>
+      <a href="howitworks.html" class="snav-item snav-link">
+        <span class="snav-ic">⊙</span>How It Works
+      </a>
+      <a href="about.html" class="snav-item snav-link">
+        <span class="snav-ic">◇</span>About
+      </a>
+      <a href="guide.html" class="snav-item snav-link">
+        <span class="snav-ic">◎</span>Guide
+      </a>
     </nav>
-    <!-- Mobile tab dropdown -->
-    <div class="tab-dropdown" id="tab-dropdown">
-      <button class="tab-dropdown-toggle" id="tab-dropdown-toggle">Overview</button>
-      <div class="tab-dropdown-menu" id="tab-dropdown-menu">
-        <button data-tab="overview">Overview</button>
-        <button data-tab="citizens">Citizens</button>
-        <button data-tab="language">Language</button>
-        <button data-tab="events">Events</button>
-        <button data-tab="learning">Learning</button>
-        <button data-tab="proto-sounds">◉ Proto-Sounds</button>
-        <a href="worlds.html" style="display:block;padding:8px 14px;color:var(--text-secondary);text-decoration:none;font-size:0.82rem;">Worlds</a>
-        <a href="insights.html" style="display:block;padding:8px 14px;color:var(--text-secondary);text-decoration:none;font-size:0.82rem;">Research</a>
-        <a href="about.html" style="display:block;padding:8px 14px;color:var(--text-secondary);text-decoration:none;font-size:0.82rem;">About</a>
-        <a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener" style="display:block;padding:8px 14px;color:var(--accent-amber);text-decoration:none;font-size:0.82rem;">Support</a>
-      </div>
+
+    <div class="snav-footer">
+      <a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener" class="snav-support">
+        ♥ Support This Project
+      </a>
     </div>
-  </header>
+  </aside>
 
   <!-- Citizen Inspect Panel (slide-in) -->
   <div class="inspect-panel" id="inspect-panel">
@@ -157,6 +179,7 @@
               <button class="toolbar-btn" id="view-social" onclick="setMapView('social')" title="Social — citizen locations, relationships">People</button>
               <button class="toolbar-btn" id="view-resources" onclick="setMapView('resources')" title="Resources — food, materials, water">Resources</button>
               <button class="toolbar-btn" id="view-danger" onclick="setMapView('danger')" title="Danger — predators, hazards, threats">Danger</button>
+              <button class="toolbar-btn" id="view-language" onclick="setMapView('language')" title="Language — citizen linguistic knowledge">Language</button>
             </div>
             <div class="toolbar-group">
               <span class="toolbar-label">LAYERS</span>
@@ -1009,7 +1032,10 @@
           <button class="help-btn" data-tooltip="Deep dive into a single citizen: their personality, vocabulary, relationships, and life story so far.">?</button>
         </div>
         <div id="citizen-spotlight" style="max-height:400px;overflow-y:auto">
-          <span class="muted-text">Select a citizen to spotlight</span>
+          <div class="empty-state">
+            <div class="empty-state-icon">◈</div>
+            <p class="empty-state-msg">Click any citizen on the map or in the Citizens tab to see their full profile, language, relationships, and memories.</p>
+          </div>
         </div>
       </div>
 
@@ -1020,7 +1046,10 @@
           <button class="help-btn" data-tooltip="Live feed of relationship changes: new bonds, betrayals, rivalries forming, and alliances breaking.">?</button>
         </div>
         <div id="drama-feed" style="max-height:300px;overflow-y:auto">
-          <span class="muted-text">No relationship drama yet</span>
+          <div class="empty-state">
+            <div class="empty-state-icon">◎</div>
+            <p class="empty-state-msg">No bonds formed yet. Watch this space as the tribe begins to interact.</p>
+          </div>
         </div>
       </div>
 
@@ -1031,7 +1060,10 @@
           <button class="help-btn" data-tooltip="AI-generated predictions about what will happen next: language milestones, deaths, relationship changes.">?</button>
         </div>
         <div id="prediction-engine">
-          <span class="muted-text">Gathering data for predictions...</span>
+          <div class="empty-state">
+            <div class="empty-state-icon">◎</div>
+            <p class="empty-state-msg">Watching for patterns... Predictions unlock after 50+ interactions.</p>
+          </div>
         </div>
       </div>
 
@@ -1042,7 +1074,10 @@
           <button class="help-btn" data-tooltip="Narrative summaries of how the environment shapes citizen behavior and language development.">?</button>
         </div>
         <div id="env-storytelling" style="max-height:300px;overflow-y:auto">
-          <span class="muted-text">No environmental stories yet</span>
+          <div class="empty-state">
+            <div class="empty-state-icon">◎</div>
+            <p class="empty-state-msg">The landscape is taking shape. Stories emerge as citizens explore and respond to their environment.</p>
+          </div>
         </div>
       </div>
 
@@ -1062,7 +1097,10 @@
           <button class="help-btn" data-tooltip="Detected multi-word combinations that hint at emerging grammar: word order patterns, repeated phrases, proto-sentences.">?</button>
         </div>
         <div id="proto-grammar-log" style="max-height:250px;overflow-y:auto">
-          <span class="muted-text">No grammar patterns detected yet</span>
+          <div class="empty-state">
+            <div class="empty-state-icon">◎</div>
+            <p class="empty-state-msg">Monitoring for emergent patterns. Grammar detection begins once 10+ shared words exist.</p>
+          </div>
         </div>
       </div>
 
@@ -1165,6 +1203,14 @@
   <div id="error-banner" class="error-banner"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=3"></script>
+  <!-- Conductor AI Labs badge -->
+  <div class="conductor-badge">
+    <a href="https://conductorailabs.com/" target="_blank" rel="noopener noreferrer">
+      <span class="conductor-badge-dot"></span>
+      <span class="conductor-badge-text">A <strong>Conductor AI Labs</strong> experiment</span>
+    </a>
+  </div>
+
 </body>
 </html>

@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A New World — How It Works</title>
+  <meta name="description" content="The technical architecture behind A New World — the world's first living AI civilization experiment. 30 independent LLMs, emergent language, and evolutionary learning.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23d4a574'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,300;1,8..60,400;1,8..60,600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--bg:#0a0a0f;--bg2:#0e0e15;--bg3:#14141d;--card:#111119;--text:#ddd5c4;--dim:#706a5e;--muted:#3a3640;--amber:#d4a574;--green:#4a9e6e;--blue:#5a9bba;--red:#c44a20;--purple:#8a6abf;--mono:'JetBrains Mono',monospace;--serif:'Source Serif 4',Georgia,serif}
+    html{font-size:16px;scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+    body{font-family:var(--serif);background:var(--bg);color:var(--text);line-height:1.75;overflow-x:hidden}
+    body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.4}
+    ::selection{background:rgba(212,165,116,0.25);color:#fff}
+    a{color:var(--amber);text-decoration:none}a:hover{text-decoration:underline}
+
+    /* NAV */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 40px;background:rgba(10,10,15,0.85);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.04)}
+    .nav-logo{font-family:var(--mono);font-size:.85rem;font-weight:700;letter-spacing:3px;text-decoration:none}
+    .nav-logo .w{color:var(--amber)}.nav-logo .m{color:var(--dim)}
+    .nav-links{display:flex;gap:28px}
+    .nav-links a{color:var(--dim);text-decoration:none;font-size:.78rem;font-weight:500;font-family:var(--mono);transition:color .3s;letter-spacing:.5px}
+    .nav-links a:hover{color:var(--text)}.nav-links a.active{color:var(--text)}.nav-links .support{color:var(--amber);opacity:.7}.nav-links .support:hover{opacity:1}
+
+    /* HERO */
+    .hero{position:relative;width:100%;min-height:80vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding-top:52px}
+    .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 100% 80% at 50% 0%,rgba(212,165,116,0.04) 0%,transparent 70%)}
+    .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:40px 40px;mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 0%,transparent 70%)}
+    .hero-inner{position:relative;z-index:2;text-align:center;max-width:860px;padding:80px 24px 60px}
+    .hero-label{font-family:var(--mono);font-size:.7rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--amber);margin-bottom:24px;opacity:.8}
+    .hero h1{font-family:var(--serif);font-weight:300;font-size:clamp(2rem,4.5vw,3.2rem);line-height:1.2;color:var(--text);margin-bottom:20px}
+    .hero h1 em{font-style:italic;color:var(--amber)}
+    .hero-sub{font-size:clamp(.95rem,1.6vw,1.05rem);color:var(--dim);line-height:1.85;max-width:640px;margin:0 auto 32px}
+    .hero-tags{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    .hero-tag{font-family:var(--mono);font-size:.65rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid rgba(212,165,116,0.2);border-radius:20px;color:var(--dim);background:rgba(212,165,116,0.04)}
+
+    /* SECTIONS */
+    .s{padding:100px 24px}.s-alt{background:var(--bg2)}.s-inner{max-width:1040px;margin:0 auto}
+    .s-label{font-family:var(--mono);font-size:.65rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--amber);margin-bottom:16px;opacity:.7}
+    .s-title{font-family:var(--serif);font-weight:600;font-size:clamp(1.4rem,2.8vw,1.85rem);line-height:1.3;color:var(--text);margin-bottom:12px}
+    .s-desc{font-size:1rem;color:var(--dim);line-height:1.9;max-width:680px;margin-bottom:40px}
+
+    /* REVEAL */
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity .75s cubic-bezier(.16,1,.3,1),transform .75s cubic-bezier(.16,1,.3,1)}
+    .reveal.vis{opacity:1;transform:translateY(0)}
+    .reveal-d1{transition-delay:.1s}.reveal-d2{transition-delay:.2s}.reveal-d3{transition-delay:.3s}.reveal-d4{transition-delay:.4s}.reveal-d5{transition-delay:.5s}
+
+    /* SPEC GRID */
+    .spec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.04);border-radius:8px;overflow:hidden;margin-top:32px}
+    .spec-cell{background:var(--card);padding:20px 22px}
+    .spec-k{font-family:var(--mono);font-size:.6rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+    .spec-v{font-family:var(--mono);font-size:.95rem;font-weight:700;color:var(--amber);line-height:1.3}
+    .spec-note{font-size:.78rem;color:var(--muted);margin-top:3px;line-height:1.4}
+
+    /* FLOW */
+    .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0;margin-top:40px;border:1px solid rgba(255,255,255,0.04);border-radius:8px;overflow:hidden}
+    .flow-step{padding:30px 24px;background:var(--card);border-right:1px solid rgba(255,255,255,0.04);position:relative;transition:background .2s}
+    .flow-step:last-child{border-right:none}
+    .flow-step:hover{background:rgba(212,165,116,0.02)}
+    .flow-num{font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:2px;color:var(--amber);opacity:.5;margin-bottom:10px}
+    .flow-icon{font-size:1.6rem;margin-bottom:10px;display:block}
+    .flow-title{font-family:var(--serif);font-size:1rem;font-weight:600;color:var(--text);margin-bottom:8px}
+    .flow-desc{font-size:.82rem;color:var(--dim);line-height:1.7}
+
+    /* TICK STEPS */
+    .tick-steps{counter-reset:tick;margin-top:32px}
+    .tick-step{display:flex;gap:20px;padding:20px 0;border-bottom:1px solid rgba(255,255,255,0.04);counter-increment:tick}
+    .tick-step:last-child{border-bottom:none}
+    .tick-num{font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--amber);opacity:.5;flex-shrink:0;width:24px;padding-top:2px}
+    .tick-num::before{content:counter(tick)}
+    .tick-body{}
+    .tick-title{font-family:var(--mono);font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:4px}
+    .tick-desc{font-size:.88rem;color:var(--dim);line-height:1.7}
+
+    /* ARCHETYPES */
+    .archetype-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:32px}
+    .arch{background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:18px 16px;transition:border-color .2s}
+    .arch:hover{border-color:rgba(212,165,116,0.15)}
+    .arch-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.75rem;font-weight:700;margin-bottom:10px}
+    .arch-icon.m{background:rgba(90,155,186,0.15);color:var(--blue);border:1px solid rgba(90,155,186,0.2)}
+    .arch-icon.f{background:rgba(212,165,116,0.15);color:var(--amber);border:1px solid rgba(212,165,116,0.2)}
+    .arch-name{font-family:var(--mono);font-size:.72rem;font-weight:700;color:var(--text);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+    .arch-desc{font-size:.78rem;color:var(--dim);line-height:1.6}
+    .arch-trait{display:inline-block;font-family:var(--mono);font-size:.58rem;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,0.04);color:var(--muted);margin-top:6px;letter-spacing:.5px}
+
+    /* PARTNER CARDS */
+    .partner-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:36px}
+    .partner{background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:28px 28px 24px;transition:border-color .25s}
+    .partner:hover{border-color:rgba(212,165,116,0.15)}
+    .partner-logo{font-family:var(--mono);font-size:1.1rem;font-weight:700;letter-spacing:2px;color:var(--text);margin-bottom:6px}
+    .partner-tag{font-family:var(--mono);font-size:.6rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--amber);opacity:.6;margin-bottom:14px;display:block}
+    .partner-desc{font-size:.9rem;color:var(--dim);line-height:1.8;margin-bottom:16px}
+    .partner-link{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--amber);letter-spacing:.5px;transition:opacity .2s}
+    .partner-link:hover{opacity:.7;text-decoration:none}
+
+    /* DB TABLE */
+    .db-table{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;margin-top:28px}
+    .db-table-item{background:var(--bg3);border:1px solid rgba(255,255,255,0.04);border-radius:4px;padding:8px 12px;font-family:var(--mono);font-size:.68rem;color:var(--dim);transition:color .15s,border-color .15s}
+    .db-table-item:hover{color:var(--amber);border-color:rgba(212,165,116,0.15)}
+
+    /* INLINE METRIC */
+    .metric-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:32px}
+    .metric{background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:20px 18px}
+    .metric-v{font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--amber);margin-bottom:4px}
+    .metric-l{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)}
+
+    /* LANG PIPELINE */
+    .lang-pipeline{display:flex;gap:0;margin-top:36px;border:1px solid rgba(255,255,255,0.04);border-radius:8px;overflow:hidden}
+    .lp-step{flex:1;padding:24px 20px;background:var(--card);border-right:1px solid rgba(255,255,255,0.04);position:relative}
+    .lp-step:last-child{border-right:none}
+    .lp-arrow{position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-size:.9rem;color:var(--amber);opacity:.4;z-index:1}
+    .lp-step:last-child .lp-arrow{display:none}
+    .lp-icon{font-size:1.4rem;margin-bottom:8px;display:block}
+    .lp-label{font-family:var(--mono);font-size:.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amber);opacity:.6;margin-bottom:6px}
+    .lp-title{font-size:.88rem;font-weight:600;color:var(--text);margin-bottom:4px;font-family:var(--serif)}
+    .lp-desc{font-size:.76rem;color:var(--dim);line-height:1.6}
+
+    /* WORLD END STEPS */
+    .end-steps{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:32px}
+    .end-step{display:flex;gap:14px;padding:20px;background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:6px;align-items:flex-start;transition:border-color .2s}
+    .end-step:hover{border-color:rgba(212,165,116,0.12)}
+    .end-step-n{font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--amber);opacity:.2;flex-shrink:0;line-height:1}
+    .end-step-body{}
+    .end-step-title{font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+    .end-step-desc{font-size:.82rem;color:var(--dim);line-height:1.65}
+
+    /* PULL QUOTE */
+    .pull{padding:72px 24px;text-align:center}
+    .pull-text{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(1.05rem,2.2vw,1.35rem);line-height:1.9;color:var(--dim);max-width:720px;margin:0 auto}
+    .pull-text em{color:var(--amber);font-style:normal}
+
+    /* CTA */
+    .cta-section{padding:80px 24px;text-align:center;background:var(--bg2)}
+    .cta-title{font-family:var(--serif);font-weight:300;font-size:clamp(1.4rem,3vw,2rem);line-height:1.4;color:var(--text);margin-bottom:12px}
+    .cta-sub{font-size:.95rem;color:var(--dim);margin-bottom:36px}
+    .cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+    .cta-btn{display:inline-block;padding:13px 36px;font-family:var(--mono);font-size:.78rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;border-radius:4px;transition:all .25s}
+    .cta-btn-primary{color:var(--bg);background:var(--amber)}
+    .cta-btn-primary:hover{background:#e0b68a;transform:translateY(-1px);box-shadow:0 8px 32px rgba(212,165,116,.2);text-decoration:none}
+    .cta-btn-outline{color:var(--amber);border:1px solid rgba(212,165,116,.3);background:transparent}
+    .cta-btn-outline:hover{border-color:var(--amber);background:rgba(212,165,116,.06);transform:translateY(-1px);text-decoration:none}
+
+    /* FOOTER */
+    .foot{padding:48px 24px;text-align:center;border-top:1px solid rgba(255,255,255,.04)}
+    .foot-logo{font-family:var(--mono);font-size:.75rem;font-weight:700;letter-spacing:3px;margin-bottom:8px}
+    .foot-logo .w{color:var(--amber)}.foot-logo .m{color:var(--muted)}
+    .foot-text{font-size:.75rem;color:var(--muted)}.foot-text a{color:var(--amber);text-decoration:none;opacity:.6}.foot-text a:hover{opacity:1}
+
+    /* RESPONSIVE */
+    @media(max-width:768px){
+      .nav{padding:12px 20px}.nav-links{gap:16px}.nav-links a{font-size:.72rem}
+      .s{padding:72px 20px}
+      .spec-grid{grid-template-columns:1fr 1fr}
+      .archetype-grid{grid-template-columns:repeat(2,1fr)}
+      .partner-row{grid-template-columns:1fr}
+      .lang-pipeline{flex-direction:column}
+      .lp-arrow{display:none}
+      .flow{grid-template-columns:1fr}
+      .end-steps{grid-template-columns:1fr}
+    }
+    @media(max-width:480px){
+      .spec-grid{grid-template-columns:1fr}
+      .archetype-grid{grid-template-columns:1fr 1fr}
+      .metric-row{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-logo"><span class="w">A NEW</span><span class="m"> WORLD</span></a>
+  <div class="nav-links">
+    <a href="index.html">Live Dashboard</a>
+    <a href="worlds.html">Worlds</a>
+    <a href="insights.html">Research</a>
+    <a href="howitworks.html" class="active">How It Works</a>
+    <a href="about.html">About</a>
+    <a href="guide.html">Guide</a>
+    <a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener" class="support">Support</a>
+  </div>
+</nav>
+
+<!-- ══════ HERO ══════ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-label">Technical Architecture · A New World</div>
+    <h1>How <em>A New World</em> Works</h1>
+    <p class="hero-sub">The technical architecture behind the world's first living AI civilization experiment — 30 independent language models, a 50km living world, emergent language, and evolutionary learning across generations.</p>
+    <div class="hero-tags">
+      <span class="hero-tag">135M Parameter LLMs</span>
+      <span class="hero-tag">LoRA Fine-tuning</span>
+      <span class="hero-tag">Emergent Language</span>
+      <span class="hero-tag">Evolutionary Training</span>
+      <span class="hero-tag">Neon Postgres</span>
+      <span class="hero-tag">Replit Cloud Run</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ THE BIG IDEA ══════ -->
+<section class="s">
+  <div class="s-inner">
+    <div class="s-label reveal">The Premise</div>
+    <h2 class="s-title reveal reveal-d1">This is not a game. It's a scientific experiment in emergence.</h2>
+    <p class="s-desc reveal reveal-d2">A New World strips 30 AI minds of language, culture, and history. It gives them only survival instincts and the ability to produce sound — then sets them loose in a world that will kill them if they don't cooperate. What happens next is unscripted, unguided, and genuinely unknown.</p>
+    <p class="s-desc reveal reveal-d3" style="margin-top:-24px">The question we're trying to answer: <strong style="color:var(--text)">if you gave intelligence the tools of life but none of its accumulated knowledge — no words, no culture, no history — would it find them again?</strong></p>
+
+    <div class="metric-row reveal reveal-d3">
+      <div class="metric">
+        <div class="metric-v">30</div>
+        <div class="metric-l">Independent AI Minds</div>
+      </div>
+      <div class="metric">
+        <div class="metric-v">50km²</div>
+        <div class="metric-l">Living World Area</div>
+      </div>
+      <div class="metric">
+        <div class="metric-v">135M</div>
+        <div class="metric-l">Parameters per Citizen</div>
+      </div>
+      <div class="metric">
+        <div class="metric-v">8</div>
+        <div class="metric-l">Personality Archetypes</div>
+      </div>
+      <div class="metric">
+        <div class="metric-v">0</div>
+        <div class="metric-l">Shared Words at Start</div>
+      </div>
+      <div class="metric">
+        <div class="metric-v">∞</div>
+        <div class="metric-l">Possible Outcomes</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ THE CITIZENS ══════ -->
+<section class="s s-alt">
+  <div class="s-inner">
+    <div class="s-label reveal">The Citizens</div>
+    <h2 class="s-title reveal reveal-d1">30 unique AI minds. No shared weights. No shared language.</h2>
+    <p class="s-desc reveal reveal-d2">Each citizen is an independent language model — a fine-tuned version of a 135M parameter base LLM. Eight archetypes, each with a distinct personality matrix encoded through LoRA fine-tuning. They don't share weights. They don't communicate through any channel except simulated speech. When citizen_07 says "bzaavk", citizen_12 genuinely doesn't know what it means — unless they've met before.</p>
+
+    <div class="spec-grid reveal reveal-d3">
+      <div class="spec-cell">
+        <div class="spec-k">Architecture</div>
+        <div class="spec-v">TinyLlama</div>
+        <div class="spec-note">Transformer decoder, optimized for real-time CPU inference</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-k">Parameter Count</div>
+        <div class="spec-v">135M</div>
+        <div class="spec-note">Per citizen — 30 independent models running simultaneously</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-k">Fine-tuning</div>
+        <div class="spec-v">LoRA</div>
+        <div class="spec-note">Low-rank adaptation on archetype-specific behavioral data</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-k">Inference Engine</div>
+        <div class="spec-v">llama-cpp-python</div>
+        <div class="spec-note">Real-time on CPU — no GPU required, fully reproducible</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-k">Context Window</div>
+        <div class="spec-v">512 tokens</div>
+        <div class="spec-note">Per citizen, per tick — constrained like biological working memory</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-k">Archetypes</div>
+        <div class="spec-v">8 types</div>
+        <div class="spec-note">Alpha, Provider, Intellectual, Wildcard &times; male/female</div>
+      </div>
+    </div>
+
+    <h3 class="reveal reveal-d4" style="font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:48px;margin-bottom:16px">The Eight Archetypes</h3>
+    <div class="archetype-grid reveal reveal-d4">
+      <div class="arch">
+        <div class="arch-icon m">A</div>
+        <div class="arch-name">Alpha ♂</div>
+        <div class="arch-desc">Aggressive, territorial, moves toward conflict. Highest influence radius, lowest listening rate.</div>
+        <span class="arch-trait">percussive phonemes</span>
+      </div>
+      <div class="arch">
+        <div class="arch-icon f">A</div>
+        <div class="arch-name">Alpha ♀</div>
+        <div class="arch-desc">Protective, coordinating, defends resources and kin. High aggression, high social density.</div>
+        <span class="arch-trait">assertive cadence</span>
+      </div>
+      <div class="arch">
+        <div class="arch-icon m">P</div>
+        <div class="arch-name">Provider ♂</div>
+        <div class="arch-desc">Forages extensively, shares resources, builds trust through repetitive cooperation.</div>
+        <span class="arch-trait">high lexical range</span>
+      </div>
+      <div class="arch">
+        <div class="arch-icon f">P</div>
+        <div class="arch-name">Provider ♀</div>
+        <div class="arch-desc">Caretaker, nutritional focus, highest memory for citizen states and needs.</div>
+        <span class="arch-trait">nurturing patterns</span>
+      </div>
+      <div class="arch">
+        <div class="arch-icon m">I</div>
+        <div class="arch-name">Intellectual ♂</div>
+        <div class="arch-desc">Observes before acting. Repeats novel sounds. Largest vocabulary, slowest to adopt new words.</div>
+        <span class="arch-trait">sibilant phonemes</span>
+      </div>
+      <div class="arch">
+        <div class="arch-icon f">I</div>
+        <div class="arch-name">Intellectual ♀</div>
+        <div class="arch-desc">Pattern detector, highest communication success rate, bridges social clusters.</div>
+        <span class="arch-trait">multi-syllabic</span>
+      </div>
+      <div class="arch">
+        <div class="arch-icon m">W</div>
+        <div class="arch-name">Wildcard ♂</div>
+        <div class="arch-desc">Unpredictable behavior, highest mutation rate in lexicon, linguistic innovator.</div>
+        <span class="arch-trait">novel phoneme combos</span>
+      </div>
+      <div class="arch">
+        <div class="arch-icon f">W</div>
+        <div class="arch-name">Wildcard ♀</div>
+        <div class="arch-desc">Explores widely, maximizes biome diversity, carries words between isolated groups.</div>
+        <span class="arch-trait">code-switching</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ THE WORLD ══════ -->
+<section class="s">
+  <div class="s-inner">
+    <div class="s-label reveal">The World</div>
+    <h2 class="s-title reveal reveal-d1">A 50km &times; 40km living environment. Not a backdrop.</h2>
+    <p class="s-desc reveal reveal-d2">The world has climate — seasons, temperature, rainfall, wind. It has biomes: tropical forest, savanna, desert, tundra, ice cap, coastal. Flora grows and depletes. Fauna hunts and flees. Citizens have real hunger, thirst, and health. They die. The environment is not decorative. It is the pressure that forces language into existence.</p>
+
+    <!-- BIOME STRIP -->
+    <div class="reveal reveal-d3" style="display:flex;gap:2px;height:160px;border-radius:8px;overflow:hidden;margin-bottom:8px">
+      <div style="flex:1;background:linear-gradient(to top,#8ab4cc,#5a7a8a);display:flex;align-items:flex-end;padding:8px;"><span style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:rgba(255,255,255,.6);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:1px">ICE</span></div>
+      <div style="flex:1;background:linear-gradient(to top,#5a7a8a,#4a6a7a);display:flex;align-items:flex-end;padding:8px;"><span style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:rgba(255,255,255,.6);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:1px">TUNDRA</span></div>
+      <div style="flex:1;background:linear-gradient(to top,#2a4a3a,#1a3a2a);display:flex;align-items:flex-end;padding:8px;"><span style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:rgba(255,255,255,.6);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:1px">BOREAL</span></div>
+      <div style="flex:1;background:linear-gradient(to top,#3a6b4a,#2d5a3a);display:flex;align-items:flex-end;padding:8px;"><span style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:rgba(255,255,255,.6);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:1px">TEMPERATE</span></div>
+      <div style="flex:1.6;background:linear-gradient(to top,#2d6a3a,#1a5a2a);display:flex;align-items:flex-end;padding:8px;"><span style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:rgba(255,255,255,.6);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:1px">TROPICAL</span></div>
+      <div style="flex:1;background:linear-gradient(to top,#8b7d3c,#6a5a2a);display:flex;align-items:flex-end;padding:8px;"><span style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:rgba(255,255,255,.6);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:1px">SAVANNA</span></div>
+      <div style="flex:1;background:linear-gradient(to top,#c4a44a,#9a7a2a);display:flex;align-items:flex-end;padding:8px;"><span style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:rgba(255,255,255,.6);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:1px">DESERT</span></div>
+      <div style="flex:1;background:linear-gradient(to top,#3a6b4a,#2d5a3a);display:flex;align-items:flex-end;padding:8px;"><span style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:rgba(255,255,255,.6);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:1px">TEMPERATE</span></div>
+      <div style="flex:1;background:linear-gradient(to top,#5a7a8a,#4a6a7a);display:flex;align-items:flex-end;padding:8px;"><span style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:rgba(255,255,255,.6);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:1px">TUNDRA</span></div>
+      <div style="flex:1;background:linear-gradient(to top,#8ab4cc,#5a7a8a);display:flex;align-items:flex-end;padding:8px;"><span style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:rgba(255,255,255,.6);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:1px">ICE</span></div>
+    </div>
+    <p class="reveal reveal-d3" style="font-family:var(--mono);font-size:.6rem;color:var(--muted);text-align:center;letter-spacing:1px;margin-bottom:36px">NORTH POLE &larr; LATITUDE GRADIENT &rarr; SOUTH POLE</p>
+
+    <div class="spec-grid reveal reveal-d4">
+      <div class="spec-cell">
+        <div class="spec-k">World Size</div>
+        <div class="spec-v">50k &times; 40k</div>
+        <div class="spec-note">Units (~50km &times; 40km) of simulated terrain</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-k">Biome Engine</div>
+        <div class="spec-v">8 Biomes</div>
+        <div class="spec-note">Procedurally generated with latitude-based climate gradients</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-k">Climate Engine</div>
+        <div class="spec-v">4 Seasons</div>
+        <div class="spec-note">Temperature, rainfall, wind — all affecting foraging and survival</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-k">Flora Engine</div>
+        <div class="spec-v">200k Cells</div>
+        <div class="spec-note">Growth grid with depletion and natural regrowth cycles</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-k">Fauna Engine</div>
+        <div class="spec-v">AI Predators</div>
+        <div class="spec-note">Behavioral AI for predators and prey — real hunt/flee dynamics</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-k">Survival Engine</div>
+        <div class="spec-v">4 Vitals</div>
+        <div class="spec-note">Hunger, thirst, health, energy — citizens can and do die</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ LANGUAGE EMERGENCE ══════ -->
+<section class="s s-alt">
+  <div class="s-inner">
+    <div class="s-label reveal">Language Emergence</div>
+    <h2 class="s-title reveal reveal-d1">The core experiment: language from nothing.</h2>
+    <p class="s-desc reveal reveal-d2">Citizens start with zero shared language. They produce proto-sounds — phonetic tokens generated by their LLM during interactions. When the same sound is independently used by 3+ citizens for the same referent, it becomes a "shared word" — the beginning of language. No one programmed this. It happens, or it doesn't.</p>
+
+    <div class="lang-pipeline reveal reveal-d3">
+      <div class="lp-step">
+        <span class="lp-icon">◉</span>
+        <div class="lp-label">Step 1</div>
+        <div class="lp-title">Proto-sound Generated</div>
+        <p class="lp-desc">Citizen LLM produces a phonetic token during an interaction. Context (fire, hunger, another citizen) shapes the sound.</p>
+        <span class="lp-arrow">›</span>
+      </div>
+      <div class="lp-step">
+        <span class="lp-icon">◈</span>
+        <div class="lp-label">Step 2</div>
+        <div class="lp-title">Personal Lexicon Update</div>
+        <p class="lp-desc">Each citizen maintains sound → meaning mappings with confidence scores. Repeated use increases confidence.</p>
+        <span class="lp-arrow">›</span>
+      </div>
+      <div class="lp-step">
+        <span class="lp-icon">◎</span>
+        <div class="lp-label">Step 3</div>
+        <div class="lp-title">Lexicon Transfer</div>
+        <p class="lp-desc">When citizens interact, they probabilistically learn from each other. Successful communication reinforces shared meaning.</p>
+        <span class="lp-arrow">›</span>
+      </div>
+      <div class="lp-step">
+        <span class="lp-icon">◇</span>
+        <div class="lp-label">Step 4</div>
+        <div class="lp-title">Shared Word</div>
+        <p class="lp-desc">3+ citizens independently using the same sound for the same referent — the sound becomes a shared word. Language exists.</p>
+        <span class="lp-arrow">›</span>
+      </div>
+      <div class="lp-step">
+        <span class="lp-icon">⊡</span>
+        <div class="lp-label">Step 5</div>
+        <div class="lp-title">Voice & Metrics</div>
+        <p class="lp-desc">The word gets a synthesized voice. Linguistic metrics computed: Zipf's law coefficient, Heaps' law beta, network clustering.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ THE TICK SYSTEM ══════ -->
+<section class="s">
+  <div class="s-inner">
+    <div class="s-label reveal">The Tick System</div>
+    <h2 class="s-title reveal reveal-d1">Every 30–90 seconds, the world advances one tick.</h2>
+    <p class="s-desc reveal reveal-d2">The simulation advances in discrete ticks. Each tick, the entire world updates: environment, citizen decisions, speech generation, lexicon evolution, survival, births, deaths. Everything you see on the dashboard is the result of this relentless, autonomous loop.</p>
+
+    <div class="tick-steps reveal reveal-d3">
+      <div class="tick-step">
+        <div class="tick-num"></div>
+        <div class="tick-body">
+          <div class="tick-title">Climate &amp; Environment Update</div>
+          <p class="tick-desc">Weather advances, temperature shifts, flora grows or depletes, predators move. The world changes first — citizens must react to what it becomes.</p>
+        </div>
+      </div>
+      <div class="tick-step">
+        <div class="tick-num"></div>
+        <div class="tick-body">
+          <div class="tick-title">Citizens Decide Their Action</div>
+          <p class="tick-desc">Each LLM processes its context window: current location, hunger, nearby citizens, recent memories. It chooses: forage, explore, socialize, or rest.</p>
+        </div>
+      </div>
+      <div class="tick-step">
+        <div class="tick-num"></div>
+        <div class="tick-body">
+          <div class="tick-title">Interactions &amp; Speech Generation</div>
+          <p class="tick-desc">Citizens within proximity range interact. Speech is generated via LLM inference — real-time, on CPU, constrained by the 512-token context window.</p>
+        </div>
+      </div>
+      <div class="tick-step">
+        <div class="tick-num"></div>
+        <div class="tick-body">
+          <div class="tick-title">Lexicon Updates</div>
+          <p class="tick-desc">Based on interaction outcomes, each citizen's personal lexicon updates. Sounds that successfully communicated meaning gain confidence. Failed communication loses it.</p>
+        </div>
+      </div>
+      <div class="tick-step">
+        <div class="tick-num"></div>
+        <div class="tick-body">
+          <div class="tick-title">Survival Stats Update</div>
+          <p class="tick-desc">Hunger, thirst, and health change based on actions taken. Citizens who didn't forage get hungrier. Citizens who were attacked lose health. Death is possible.</p>
+        </div>
+      </div>
+      <div class="tick-step">
+        <div class="tick-num"></div>
+        <div class="tick-body">
+          <div class="tick-title">Births &amp; Deaths Processed</div>
+          <p class="tick-desc">New citizens may be born (inheriting traits from parents' archetypes). Citizens whose health reaches zero die and are removed from the simulation permanently.</p>
+        </div>
+      </div>
+      <div class="tick-step">
+        <div class="tick-num"></div>
+        <div class="tick-body">
+          <div class="tick-title">World State Saved to Database</div>
+          <p class="tick-desc">Every tick produces a complete snapshot: positions, lexicon states, interaction logs, science metrics, utterances. Saved to Neon Postgres for the dashboard to read.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PULL -->
+<div class="pull reveal">
+  <p class="pull-text">"World 2 citizens think differently than World 1 citizens — because they carry the <em>distilled experiences of World 1</em> in their weights. Every world that ends teaches the next world how to survive."</p>
+</div>
+
+<!-- ══════ WHEN A WORLD ENDS ══════ -->
+<section class="s s-alt">
+  <div class="s-inner">
+    <div class="s-label reveal">World Evolution</div>
+    <h2 class="s-title reveal reveal-d1">When a world ends, the tribe literally learns from its past life.</h2>
+    <p class="s-desc reveal reveal-d2">A world ends when population drops below threshold, a cataclysmic event occurs, or the world reaches a civilization milestone. What happens next is the part that makes A New World genuinely different from any other AI experiment.</p>
+
+    <div class="end-steps reveal reveal-d3">
+      <div class="end-step">
+        <div class="end-step-n">1</div>
+        <div class="end-step-body">
+          <div class="end-step-title">Evolution Engine Activates</div>
+          <p class="end-step-desc">Every interaction, every word invented, every relationship formed, every death — analyzed across the entire world's history to generate training signal.</p>
+        </div>
+      </div>
+      <div class="end-step">
+        <div class="end-step-n">2</div>
+        <div class="end-step-body">
+          <div class="end-step-title">Training Data Generated</div>
+          <p class="end-step-desc">New fine-tuning examples created from lived experiences: what worked, what failed, which sounds carried meaning, which behaviors led to survival.</p>
+        </div>
+      </div>
+      <div class="end-step">
+        <div class="end-step-n">3</div>
+        <div class="end-step-body">
+          <div class="end-step-title">Base LLM Fine-tuned</div>
+          <p class="end-step-desc">The 135M base model is updated via LoRA adapter training on the new dataset. This is additive — prior world knowledge is preserved, new knowledge layered on top.</p>
+        </div>
+      </div>
+      <div class="end-step">
+        <div class="end-step-n">4</div>
+        <div class="end-step-body">
+          <div class="end-step-title">Next World Begins</div>
+          <p class="end-step-desc">A new world generates, new citizens spawn from the evolved models. They remember nothing explicitly — but their instincts, patterns, and proto-linguistic tendencies are different. Smarter. More social. More language-ready.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ VOICE / ELEVENLABS ══════ -->
+<section class="s">
+  <div class="s-inner">
+    <div class="s-label reveal">Voice</div>
+    <h2 class="s-title reveal reveal-d1">Every shared word gets a voice — powered by ElevenLabs.</h2>
+    <p class="s-desc reveal reveal-d2">When a proto-sound achieves "shared word" status — when 3+ citizens independently use it for the same meaning — it gets synthesized into actual audio. You can hear the tribe's language evolving in real time. Not text to speech. Voice to civilization.</p>
+
+    <div class="partner-row reveal reveal-d3">
+      <div class="partner">
+        <div class="partner-logo">ElevenLabs</div>
+        <span class="partner-tag">Voice Synthesis Partner</span>
+        <p class="partner-desc">A New World uses the ElevenLabs API — the world's most expressive text-to-speech technology — to synthesize each proto-word with phonetic authenticity. Voice is selected based on citizen archetype and biological sex. The result is a language that sounds alien yet somehow human.</p>
+        <ul style="list-style:none;margin-bottom:16px">
+          <li style="font-size:.82rem;color:var(--dim);padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">&#9654; Triggered when a sound crosses the shared lexicon threshold</li>
+          <li style="font-size:.82rem;color:var(--dim);padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">&#9654; Voice selected based on citizen archetype and sex</li>
+          <li style="font-size:.82rem;color:var(--dim);padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">&#9654; Audio stored in Neon database with full metadata</li>
+          <li style="font-size:.82rem;color:var(--dim);padding:5px 0">&#9654; Playable in the Proto-Sounds dashboard tab</li>
+        </ul>
+        <a href="https://elevenlabs.io" target="_blank" rel="noopener" class="partner-link">elevenlabs.io &#8599;</a>
+      </div>
+      <div style="background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:28px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dim)">Example Proto-Words (With Audio)</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(212,165,116,0.04);border:1px solid rgba(212,165,116,0.1);border-radius:6px">
+            <span style="font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--amber)">kroh-tuh</span>
+            <span style="font-size:.75rem;color:var(--dim);flex:1">Fire / Heat / Danger-of-flame</span>
+            <span style="font-family:var(--mono);font-size:.6rem;color:var(--muted)">7 speakers</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(212,165,116,0.04);border:1px solid rgba(212,165,116,0.1);border-radius:6px">
+            <span style="font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--amber)">gahn-neh</span>
+            <span style="font-size:.75rem;color:var(--dim);flex:1">Danger / Predator nearby</span>
+            <span style="font-family:var(--mono);font-size:.6rem;color:var(--muted)">12 speakers</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(212,165,116,0.04);border:1px solid rgba(212,165,116,0.1);border-radius:6px">
+            <span style="font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--amber)">muh-brash</span>
+            <span style="font-size:.75rem;color:var(--dim);flex:1">Greeting / I see you</span>
+            <span style="font-family:var(--mono);font-size:.6rem;color:var(--muted)">9 speakers</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(212,165,116,0.04);border:1px solid rgba(212,165,116,0.1);border-radius:6px">
+            <span style="font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--amber)">pah-skuh</span>
+            <span style="font-size:.75rem;color:var(--dim);flex:1">Food / This is edible</span>
+            <span style="font-family:var(--mono);font-size:.6rem;color:var(--muted)">5 speakers</span>
+          </div>
+        </div>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:4px;line-height:1.6">None of these words were programmed. They emerged from context and repetition in the living world — then given voice by ElevenLabs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ INFRASTRUCTURE / REPLIT ══════ -->
+<section class="s s-alt">
+  <div class="s-inner">
+    <div class="s-label reveal">Infrastructure</div>
+    <h2 class="s-title reveal reveal-d1">Built entirely on Replit. Running continuously, right now.</h2>
+    <p class="s-desc reveal reveal-d2">A New World runs on Replit — from the Python simulation engine to the dashboard you're reading. The world loop, LLM inference, and evolution engine run continuously in a Replit workspace. The dashboard is deployed via Replit's Cloud Run integration, giving it a production URL with zero-downtime deploys and containerized hosting.</p>
+
+    <div class="partner-row reveal reveal-d3">
+      <div class="partner">
+        <div class="partner-logo">Replit</div>
+        <span class="partner-tag">Infrastructure Partner</span>
+        <p class="partner-desc">Replit makes it possible to build, run, and deploy an experiment like this without managing infrastructure. The Python simulation runs in a persistent workspace. The dashboard deploys to Cloud Run with a single click. SSH access enables live debugging and hotfixes while the world runs.</p>
+        <ul style="list-style:none;margin-bottom:16px">
+          <li style="font-size:.82rem;color:var(--dim);padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">&#9654; Instant deployment from workspace to production</li>
+          <li style="font-size:.82rem;color:var(--dim);padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">&#9654; SSH access for live debugging and hotfixes</li>
+          <li style="font-size:.82rem;color:var(--dim);padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">&#9654; Cloud Run integration for scalable, containerized hosting</li>
+          <li style="font-size:.82rem;color:var(--dim);padding:5px 0">&#9654; Zero infrastructure management — focus on the science</li>
+        </ul>
+        <a href="https://replit.com" target="_blank" rel="noopener" class="partner-link">replit.com &#8599;</a>
+      </div>
+      <div style="background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:8px;padding:28px">
+        <div style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:16px">Architecture Overview</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="padding:12px 16px;background:rgba(255,255,255,0.02);border-left:2px solid var(--green);border-radius:0 4px 4px 0">
+            <div style="font-family:var(--mono);font-size:.72rem;font-weight:700;color:var(--text);margin-bottom:2px">Simulation Engine</div>
+            <div style="font-size:.78rem;color:var(--dim)">Python · llama-cpp-python · Replit Workspace · Continuous loop</div>
+          </div>
+          <div style="padding:12px 16px;background:rgba(255,255,255,0.02);border-left:2px solid var(--blue);border-radius:0 4px 4px 0">
+            <div style="font-family:var(--mono);font-size:.72rem;font-weight:700;color:var(--text);margin-bottom:2px">API Layer</div>
+            <div style="font-size:.78rem;color:var(--dim)">FastAPI · /api/state · /api/snapshot · /api/lexicon · JSON</div>
+          </div>
+          <div style="padding:12px 16px;background:rgba(255,255,255,0.02);border-left:2px solid var(--amber);border-radius:0 4px 4px 0">
+            <div style="font-family:var(--mono);font-size:.72rem;font-weight:700;color:var(--text);margin-bottom:2px">Dashboard</div>
+            <div style="font-size:.78rem;color:var(--dim)">HTML/CSS/JS · Replit Cloud Run · Zero-dependency · Polls every 5s</div>
+          </div>
+          <div style="padding:12px 16px;background:rgba(255,255,255,0.02);border-left:2px solid var(--purple);border-radius:0 4px 4px 0">
+            <div style="font-family:var(--mono);font-size:.72rem;font-weight:700;color:var(--text);margin-bottom:2px">Database</div>
+            <div style="font-size:.78rem;color:var(--dim)">Neon Postgres · Serverless · Branching · pgvector for embeddings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ DATA & DATABASE ══════ -->
+<section class="s">
+  <div class="s-inner">
+    <div class="s-label reveal">Data &amp; Database</div>
+    <h2 class="s-title reveal reveal-d1">Every tick. Every word. Every death. All stored in Neon.</h2>
+    <p class="s-desc reveal reveal-d2">All world state is stored in Neon — a serverless Postgres database with branching. Every tick produces data: interactions logged, lexicon states saved, citizen positions recorded, science metrics computed. The dashboard polls <code style="font-family:var(--mono);font-size:.88em;background:rgba(255,255,255,0.05);padding:1px 6px;border-radius:3px">/api/state</code> every 5 seconds to display live state.</p>
+
+    <div class="spec-grid reveal reveal-d3" style="grid-template-columns:repeat(2,1fr)">
+      <div class="spec-cell">
+        <div class="spec-k">Database</div>
+        <div class="spec-v">Neon Postgres</div>
+        <div class="spec-note">Serverless, branching, pgvector — the right database for living data</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-k">Poll Interval</div>
+        <div class="spec-v">5 seconds</div>
+        <div class="spec-note">Dashboard polling frequency for near-real-time state display</div>
+      </div>
+    </div>
+
+    <h3 class="reveal reveal-d4" style="font-family:var(--mono);font-size:.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:40px;margin-bottom:12px">Database Tables</h3>
+    <div class="db-table reveal reveal-d4">
+      <div class="db-table-item">citizens</div>
+      <div class="db-table-item">interactions</div>
+      <div class="db-table-item">lexicon_entries</div>
+      <div class="db-table-item">shared_lexicon</div>
+      <div class="db-table-item">memories</div>
+      <div class="db-table-item">worlds</div>
+      <div class="db-table-item">utterance_log</div>
+      <div class="db-table-item">breeding_events</div>
+      <div class="db-table-item">narratives</div>
+      <div class="db-table-item">science_metrics</div>
+      <div class="db-table-item">voice_clips</div>
+      <div class="db-table-item">state_snapshots</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ CTA ══════ -->
+<section class="cta-section reveal">
+  <div class="cta-title">Watch the experiment unfold.</div>
+  <p class="cta-sub">The world is running right now. Language is either being born or struggling to exist.</p>
+  <div class="cta-btns">
+    <a href="index.html" class="cta-btn cta-btn-primary">Watch It Live</a>
+    <a href="insights.html" class="cta-btn cta-btn-outline">Read the Science</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="foot">
+  <div class="foot-logo"><span class="w">A NEW</span><span class="m"> WORLD</span></div>
+  <p class="foot-text">A living AI civilization experiment &mdash; running continuously since World 1. &nbsp;|&nbsp; <a href="index.html">Live Dashboard</a> &nbsp;|&nbsp; <a href="about.html">About</a> &nbsp;|&nbsp; <a href="https://buymeacoffee.com/wildminds" target="_blank" rel="noopener">Support</a></p>
+</footer>
+
+<script>
+  // Reveal on scroll
+  var reveals = document.querySelectorAll('.reveal');
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('vis'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -48px 0px' });
+  reveals.forEach(function(el) { io.observe(el); });
+</script>
+
+  <!-- Conductor AI Labs badge -->
+  <div class="conductor-badge">
+    <a href="https://conductorailabs.com/" target="_blank" rel="noopener noreferrer">
+      <span class="conductor-badge-dot"></span>
+      <span class="conductor-badge-text">A <strong>Conductor AI Labs</strong> experiment</span>
+    </a>
+  </div>
+
+</body>
+</html>

@@ -42,7 +42,7 @@ function ok(body, cache = true) {
     statusCode: 200,
     headers: {
       ...CORS_HEADERS,
-      "Cache-Control": cache ? "public, max-age=10" : "no-cache",
+      "Cache-Control": cache ? "private, max-age=10" : "no-cache",
     },
     body: JSON.stringify(body),
   };
@@ -54,6 +54,12 @@ function err(statusCode, message) {
     headers: CORS_HEADERS,
     body: JSON.stringify({ error: message }),
   };
+}
+
+function safeJSON(val, fallback = null) {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val !== "string") return val;
+  try { return JSON.parse(val); } catch (_) { return fallback; }
 }
 
 // Clamp an integer parameter to a safe range
@@ -92,7 +98,7 @@ async function handleCitizens(client) {
     personality: r.personality,
     knowledge: r.knowledge,
     vocabulary: r.vocabulary,
-    parent_ids: typeof r.parent_ids === "string" ? JSON.parse(r.parent_ids) : (r.parent_ids || []),
+    parent_ids: safeJSON(r.parent_ids, []),
     birth_tick: r.birth_tick,
     alive: r.alive,
     active: r.active,
@@ -134,7 +140,7 @@ async function handleLexicon(client) {
     sound: r.sound,
     meaning: r.meaning,
     confidence: parseFloat(r.confidence),
-    established_by: typeof r.established_by === "string" ? JSON.parse(r.established_by) : (r.established_by || []),
+    established_by: safeJSON(r.established_by, []),
     citizen_count: r.citizen_count,
     tick_established: r.tick_established,
   }));
@@ -192,19 +198,21 @@ async function handleScience(client) {
   return ok({ tick: row.tick, metrics });
 }
 
+// Static query map — never interpolate table names into SQL strings
+const HISTORY_TABLE_QUERIES = {
+  science_metrics: "SELECT * FROM science_metrics ORDER BY id DESC LIMIT $1",
+  state_snapshots: "SELECT * FROM state_snapshots ORDER BY id DESC LIMIT $1",
+  utterance_log:   "SELECT * FROM utterance_log ORDER BY id DESC LIMIT $1",
+};
+
 async function handleHistory(client, params) {
   const table = params.table;
-  if (!table || !ALLOWED_HISTORY_TABLES.includes(table)) {
+  if (!table || !HISTORY_TABLE_QUERIES[table]) {
     return err(400, `Invalid or missing table parameter. Allowed: ${ALLOWED_HISTORY_TABLES.join(", ")}`);
   }
   const limit = clampInt(params.limit, 50, 1, 500);
 
-  // Each table has different columns; use SELECT * for flexibility,
-  // but always order by a sensible default and limit rows.
-  const res = await client.query(
-    `SELECT * FROM ${table} ORDER BY id DESC LIMIT $1`,
-    [limit]
-  );
+  const res = await client.query(HISTORY_TABLE_QUERIES[table], [limit]);
 
   return ok({ table, rows: res.rows, count: res.rows.length });
 }

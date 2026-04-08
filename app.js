@@ -1444,8 +1444,9 @@
           var _cssW = _canvas.width / _dpr;
           var _cssH = _canvas.height / _dpr;
           var _baseScale = Math.max(_cssW / ENV_COLS, _cssH / ENV_ROWS);
-          // Center on fire_pit (25000, 20000) at zoom 4 so spread tribe is clearly visible
-          var _zoom = 4;
+          // Center on fire_pit (25000, 20000) at zoom 2 — citizens spawn ±3000 units
+          // away so zoom 4 clips outliers; zoom 2 keeps all of them on screen
+          var _zoom = 2;
           var _sx = (25000 / TILE_PX) * _baseScale * _zoom;
           var _sy = (20000 / TILE_PX) * _baseScale * _zoom;
           mapZoom = _zoom;
@@ -1727,8 +1728,8 @@
         Object.assign(merged[c.id], updates);
       } else {
         merged[c.id] = Object.assign({}, c, {
-          x: loc.x != null ? loc.x : 2000,
-          y: loc.y != null ? loc.y : 1500
+          x: loc.x != null ? loc.x : 25000,
+          y: loc.y != null ? loc.y : 20000
         });
       }
     });

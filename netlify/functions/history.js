@@ -32,18 +32,21 @@ exports.handler = async (event) => {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type, x-api-key",
-    "Cache-Control": "public, max-age=30",
+    "Cache-Control": "private, max-age=30",
   };
 
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers, body: "" };
   }
 
-  // API key authentication
+  // API key authentication (constant-time comparison prevents timing attacks)
   const apiKey = process.env.WILDMIND_API_KEY;
   if (apiKey) {
-    const provided = event.headers["x-api-key"] || event.queryStringParameters?.key;
-    if (provided !== apiKey) {
+    const provided = event.headers["x-api-key"] || "";
+    const crypto = require("crypto");
+    const valid = provided.length === apiKey.length &&
+      crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(apiKey));
+    if (!valid) {
       return { statusCode: 401, headers, body: JSON.stringify({ error: "Unauthorized" }) };
     }
   }
